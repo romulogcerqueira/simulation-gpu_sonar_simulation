@@ -8,19 +8,16 @@ using namespace gpu_sonar_simulation;
 namespace gpu_sonar_simulation {
 
 // Calculate the maximum intensity of each bin
-cv::Mat SonarSim::getPingIntensity(cv::Mat hist) {
+cv::Mat SonarSim::getPingMaxIntensity(cv::Mat hist) {
 
 	cv::Mat ping_intensity = cv::Mat::zeros(hist.rows, 1, CV_32F);
-	std::vector<int> vec;
-	int id_max_value;
+	cv::Point max_loc;
 
 	for (int i = 0; i < hist.rows; i++) {
-		hist.row(i).copyTo(vec);
-		id_max_value = std::distance(vec.begin(),
-				std::max_element(vec.begin(), vec.end()));
-		ping_intensity.at<float>(i) = (float) id_max_value
-				/ (float) hist.cols;
+		cv::minMaxLoc(hist.row(i), NULL, NULL, NULL, &max_loc);
+		ping_intensity.at<float>(i) = max_loc.x;
 	}
+	ping_intensity /= hist.cols;
 
 	return ping_intensity;
 }
@@ -43,31 +40,22 @@ cv::Mat SonarSim::decodeRawImage(cv::Mat raw_image, int num_bins, int slices =
 	std::vector<std::vector<float> > bin_normal(num_bins);
 
 	cv::Mat histogram = cv::Mat::zeros(num_bins, slices, CV_32S);
-	cv::Mat ping_intensity;
 
-	// organize depth and normal values
-	int ind_bin, ind_hist;
+	// organize depth and normal values and generate the histogram
+	int id_bin, id_hist;
 	for (int i = 0; i < raw_image.rows; i++) {
 		for (int j = 0; j < raw_image.cols; j++) {
-			ind_bin = raw_image.at<Vec3f>(i, j)[0] / interval;
-			if (ind_bin == num_bins)
-				ind_bin--;
-			bin_depth[ind_bin]++;
-			bin_normal[ind_bin].push_back(raw_image.at<Vec3f>(i, j)[1]);
-		}
-	}
-
-	// calculate the normal histogram for each bin
-	for (int i = 0; i < num_bins; i++) {
-		for (uint j = 0; j < bin_normal[i].size(); j++) {
-			ind_hist = (int) (bin_normal[i][j] * slices);
-			if (ind_hist == slices)
-				ind_hist--;
-			histogram.at<int>(i, ind_hist)++;}
+			id_bin = raw_image.at<Vec3f>(i, j)[0] / interval;
+			if (id_bin == num_bins)
+				id_bin--;
+			bin_depth[id_bin]++;
+			bin_normal[id_bin].push_back(raw_image.at<Vec3f>(i, j)[1]);
+			id_hist = (int) (raw_image.at<Vec3f>(i, j)[1] * slices);
+			if (id_hist == slices)
+				id_hist--;
+			histogram.at<int>(id_bin, id_hist)++;}
 		}
 
-	ping_intensity = getPingIntensity(histogram);
-
-	return ping_intensity;
+	return getPingMaxIntensity(histogram);
 }
 }

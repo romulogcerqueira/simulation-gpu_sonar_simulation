@@ -11,7 +11,9 @@ namespace gpu_sonar_simulation {
 class SonarSim {
 public:
 	cv::Mat decodeRawImage(cv::Mat raw_image, int num_bins, int slices);
-	cv::Mat getPingIntensity(cv::Mat hist);
+
+private:
+	cv::Mat getPingMaxIntensity(cv::Mat hist);
 };
 
 } // end namespace gpu_sonar_simulation
