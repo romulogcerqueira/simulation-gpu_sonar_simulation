@@ -37,14 +37,21 @@ cv::Mat createRandomImage(int rows, int cols) {
 BOOST_AUTO_TEST_CASE(first_test) {
 
 	int rows = 800, cols = 600;
-	int num_bins = 1800, slices = 100;
+//	int num_bins = 1800, slices = 100;
 
 	SonarSim sonar;
 
+	// create a random image
 	cv::Mat raw_image = createRandomImage(rows, cols);
 
-	cv::Mat ping_intensity = sonar.decodeRawImage(raw_image, num_bins, slices);
+	// simulate ping
+	std::vector<uint8_t> beam = sonar.decodeRawImage(raw_image);
 
+	printf("\nBeam Data:\n");
+	for(int i=0; i<beam.size(); i++)
+		printf("beam[%d] = %d\n", i, beam[i]);
 }
+
+
 
 BOOST_AUTO_TEST_SUITE_END();
