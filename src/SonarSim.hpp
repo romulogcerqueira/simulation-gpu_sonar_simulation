@@ -13,7 +13,7 @@ public:
 	cv::Mat decodeRawImage(cv::Mat raw_image, int num_bins, int slices);
 
 private:
-	cv::Mat getPingMaxIntensity(cv::Mat hist);
+	cv::Mat getPingIntensity(cv::Mat hist);
 };
 
 } // end namespace gpu_sonar_simulation

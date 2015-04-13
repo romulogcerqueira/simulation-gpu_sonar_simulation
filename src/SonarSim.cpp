@@ -8,12 +8,12 @@ using namespace gpu_sonar_simulation;
 namespace gpu_sonar_simulation {
 
 // Calculate the maximum intensity of each bin
-cv::Mat SonarSim::getPingMaxIntensity(cv::Mat hist) {
+cv::Mat SonarSim::getPingIntensity(cv::Mat hist) {
 
 	cv::Mat ping_intensity = cv::Mat::zeros(hist.rows, 1, CV_32F);
-	cv::Point max_loc;
 
 	for (int i = 0; i < hist.rows; i++) {
+		cv::Point max_loc;
 		cv::minMaxLoc(hist.row(i), NULL, NULL, NULL, &max_loc);
 		ping_intensity.at<float>(i) = max_loc.x;
 	}
@@ -42,20 +42,21 @@ cv::Mat SonarSim::decodeRawImage(cv::Mat raw_image, int num_bins, int slices =
 	cv::Mat histogram = cv::Mat::zeros(num_bins, slices, CV_32S);
 
 	// organize depth and normal values and generate the histogram
-	int id_bin, id_hist;
 	for (int i = 0; i < raw_image.rows; i++) {
 		for (int j = 0; j < raw_image.cols; j++) {
-			id_bin = raw_image.at<Vec3f>(i, j)[0] / interval;
+			int id_bin = raw_image.at<Vec3f>(i, j)[0] / interval;
 			if (id_bin == num_bins)
 				id_bin--;
 			bin_depth[id_bin]++;
 			bin_normal[id_bin].push_back(raw_image.at<Vec3f>(i, j)[1]);
-			id_hist = (int) (raw_image.at<Vec3f>(i, j)[1] * slices);
+			int id_hist = (int) (raw_image.at<Vec3f>(i, j)[1] * slices);
 			if (id_hist == slices)
 				id_hist--;
-			histogram.at<int>(id_bin, id_hist)++;}
+			histogram.at<int>(id_bin, id_hist)++;
 		}
+	}
 
-	return getPingMaxIntensity(histogram);
+	return getPingIntensity(histogram);
 }
+
 }
