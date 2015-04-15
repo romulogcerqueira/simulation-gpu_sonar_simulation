@@ -1,17 +1,12 @@
 <package>
-  <description brief="Library for Rock's Sonar Simulation">
+  <description brief="Driver for Imaging Sonar Simulation">
   
   </description>
-  <author>Rômulo Cerqueira/Tiago Trocoli/romulogcerqueira@gmail.com/trocolit2@gmail.com</author>
+  <author>Rômulo Cerqueira/romulogcerqueira@gmail.com</author>
   <license></license>
   <url>http://</url>
   <logo>http://</logo>
   <depend package="base/cmake" />
-  <!--
-   To add any dependencies use the depend tag
-  <depend package="dummy-dependency-0" />
-	...
-  <depend package="dummy-dependency-n-1" />
-  <depend package="dummy-dependency-n" />
-  -->
+  <depend package="base/types" />
+  <depend package="opencv" />
 </package>
