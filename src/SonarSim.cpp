@@ -8,7 +8,7 @@ using namespace gpu_sonar_simulation;
 namespace gpu_sonar_simulation {
 
 SonarSim::SonarSim() {
-	_number_of_bins = 1800;
+	_number_of_bins = 5;
 	_range = 20.0;
 	_speed_of_sound = 1500.0;
 	_ad_low = 8;
@@ -20,7 +20,7 @@ SonarSim::~SonarSim() {
 
 // Receive the depth and normal matrixes from the source image and
 // return the maximum intensity for each bin
-std::vector<uint8_t> SonarSim::decodeRawImage(cv::Mat raw_image, int slices) {
+cv::Mat SonarSim::decodeRawImage(cv::Mat raw_image) {
 
 	std::cout << "Decoding simulated image..." << std::endl;
 
@@ -32,45 +32,37 @@ std::vector<uint8_t> SonarSim::decodeRawImage(cv::Mat raw_image, int slices) {
 	float interval = 1.0 / (float) _number_of_bins;
 
 	std::vector<int> bin_depth(_number_of_bins, 0);
-	std::vector<std::vector<float> > bin_normal(_number_of_bins);
+	cv::Mat raw_intensity = cv::Mat::zeros(_number_of_bins, 1, CV_32F);
 
-	cv::Mat histogram = cv::Mat::zeros(_number_of_bins, slices, CV_32S);
-
-	// organize depth and normal values and generate the histogram
+	// organize depth and normal values and generate the intensity for each bin
 	for (int i = 0; i < raw_image.rows; i++) {
 		for (int j = 0; j < raw_image.cols; j++) {
 			int id_bin = raw_image.at<Vec3f>(i, j)[0] / interval;
 			if (id_bin == _number_of_bins)
 				id_bin--;
 			bin_depth[id_bin]++;
-			bin_normal[id_bin].push_back(raw_image.at<Vec3f>(i, j)[1]);
-			int id_hist = (int) (raw_image.at<Vec3f>(i, j)[1] * slices);
-			if (id_hist == slices)
-				id_hist--;
-			histogram.at<int>(id_bin, id_hist)++;}
-		}
 
-	return getPingIntensity(histogram);
+			// sum of intensities (using the sigmoid of each normal)
+			raw_intensity.at<float>(id_bin) += sigmoid(raw_image.at<Vec3f>(i, j)[1]);
+//			raw_intensity.at<float>(id_bin) += raw_image.at<Vec3f>(i, j)[1];
+		}
+	}
+
+	// calculate the mean of each intensity bin
+	for (int i = 0; i < _number_of_bins; i++)
+		raw_intensity.at<float>(i) /= (float) bin_depth[i];
+
+	return raw_intensity;
 }
 
 // Calculate the maximum intensity of one ping (8-bit format) by normal histogram
-std::vector<uint8_t> SonarSim::getPingIntensity(cv::Mat hist) {
+std::vector<uint8_t> SonarSim::getPingIntensity(cv::Mat raw_intensity) {
 
-	cv::Mat ping_intensity = cv::Mat::zeros(hist.rows, 1, CV_32F);
 	std::vector<uint8_t> data;
-
-	// calculate the maximum intensity of each bin
-	for (int i = 0; i < hist.rows; i++) {
-		cv::Point max_loc;
-		cv::minMaxLoc(hist.row(i), NULL, NULL, NULL, &max_loc);
-		ping_intensity.at<float>(i) = max_loc.x;
-	}
-	ping_intensity /= hist.cols;
 
 	// convert to SonarBeam::beam data format (8-bit)
 	std::cout << "Simulating beam data..." << std::endl;
-	ping_intensity *= 255;
-	ping_intensity.convertTo(data, CV_8U);
+	raw_intensity.convertTo(data, CV_8U, 255);
 
 	return data;
 }
@@ -114,7 +106,7 @@ base::samples::SonarScan SonarSim::createSimSonarData(
 //	sonar.start_bearing = NULL;
 //	sonar.angular_resolution = NULL;
 	sonar.sampling_interval = ((640.0 * ad_interval) * 1e-9);
-	sonar.beamwidth_horizontal =  base::Angle::fromDeg(3.0);
+	sonar.beamwidth_horizontal = base::Angle::fromDeg(3.0);
 	sonar.beamwidth_vertical = base::Angle::fromDeg(35.0);
 	sonar.speed_of_sound = _speed_of_sound;
 

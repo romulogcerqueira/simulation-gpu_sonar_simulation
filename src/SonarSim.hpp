@@ -19,8 +19,10 @@ public:
 	SonarSim();
 	~SonarSim();
 
+	float sigmoid(float x);
 	uint16_t getADInterval();
-	std::vector<uint8_t> decodeRawImage(cv::Mat raw_image, int slices=40);
+	cv::Mat decodeRawImage(cv::Mat raw_image);
+	std::vector<uint8_t> getPingIntensity(cv::Mat raw_intensity);
 	base::samples::SonarScan createSimSonarData(std::vector<uint8_t> beam);
 
 	uint16_t getNumberOfBins() const {
@@ -40,9 +42,6 @@ public:
 	}
 
 private:
-	float sigmoid(float x);
-	std::vector<uint8_t> getPingIntensity(cv::Mat hist);
-
 	uint16_t _number_of_bins;
 	uint8_t _ad_low;
 	uint8_t _ad_span;

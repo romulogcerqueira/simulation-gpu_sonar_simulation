@@ -34,24 +34,38 @@ cv::Mat createRandomImage(int rows, int cols) {
 	return raw_image;
 }
 
+
+
 BOOST_AUTO_TEST_CASE(first_test) {
 
-	int rows = 800, cols = 600;
-//	int num_bins = 1800, slices = 100;
+	using namespace gpu_sonar_simulation_MicronSim;
+
+	int rows = 25, cols = 25;
 
 	SonarSim sonar;
 
 	// create a random image
 	cv::Mat raw_image = createRandomImage(rows, cols);
 
-	// simulate ping
-	std::vector<uint8_t> beam = sonar.decodeRawImage(raw_image);
+	// print depth and normal matrixes
+	for (int i = 0; i < rows; i++)
+		for (int j = 0; j < cols; j++)
+			printf("D[%d][%d] = %.3f\n", i, j, raw_image.at<Vec3f>(i, j)[0]);
+	printf("\n");
+	for (int i = 0; i < rows; i++)
+		for (int j = 0; j < cols; j++)
+			printf("N[%d][%d] = %.3f\n", i, j, raw_image.at<Vec3f>(i, j)[1]);
 
+	cv::Mat raw_intensity = sonar.decodeRawImage(raw_image);
+	std::vector<uint8_t> beam = sonar.getPingIntensity(raw_intensity);
+
+	// print raw intensity
+	std::cout << "Raw Intensity 3: " << raw_intensity << std::endl;
+
+	// print beam data
 	printf("\nBeam Data:\n");
-	for(int i=0; i<beam.size(); i++)
+	for (int i = 0; i < beam.size(); i++)
 		printf("beam[%d] = %d\n", i, beam[i]);
 }
-
-
 
 BOOST_AUTO_TEST_SUITE_END();
