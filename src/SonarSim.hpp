@@ -20,10 +20,12 @@ public:
 	~SonarSim();
 
 	float sigmoid(float x);
+	float halfGaussian(float x);
 	uint16_t getADInterval();
 	cv::Mat decodeRawImage(cv::Mat raw_image);
 	std::vector<uint8_t> getPingIntensity(cv::Mat raw_intensity);
 	base::samples::SonarScan createSimSonarData(std::vector<uint8_t> beam);
+	cv::Mat convertOSG2CV();
 
 	uint16_t getNumberOfBins() const {
 		return _number_of_bins;
@@ -38,7 +40,12 @@ public:
 	}
 
 	void setRange(float range) {
-		_range = range;
+		if(range < 5.0)
+			_range = 5.0;
+		else if(range > 300.0)
+			_range = 300.0;
+		else
+			_range = range;
 	}
 
 private:
@@ -47,6 +54,7 @@ private:
 	uint8_t _ad_span;
 	float _range;
 	float _speed_of_sound;
+	float _gain;
 };
 
 } // end namespace gpu_sonar_simulation

@@ -9,4 +9,8 @@
   <depend package="base/cmake" />
   <depend package="base/types" />
   <depend package="opencv" />
+  <depend package="gui/vizkit3d_normal_depth_map" /> 
+  
+  <!-- osg dependencies -->
+  <rosdep name="osg" />
 </package>
