@@ -21,7 +21,6 @@ cv::Mat convertShaderOSG2CV(osg::ref_ptr<osg::Image> osg_image) {
 osg::Matrix getScanMatrix(const osg::Matrix src, double deg) {
 	osg::Matrix dst = src;
 
-	dst.preMult(osg::Matrix::rotate(osg::Quat(osg::DegreesToRadians(90.0), osg::X_AXIS)));
 	dst.preMult(osg::Matrix::rotate(osg::Quat(osg::DegreesToRadians(-deg), osg::Z_AXIS)));
 
 	return dst;

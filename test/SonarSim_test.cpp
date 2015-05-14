@@ -7,7 +7,7 @@
 
 #include <gpu_sonar_simulation/ScanningSonar.hpp>
 #include <gpu_sonar_simulation/SonarConfig.hpp>
-#include <gpu_sonar_simulation/Utils.hpp>
+#include <gpu_sonar_simulation/SonarUtils.hpp>
 #include <vizkit3d_normal_depth_map/NormalDepthMap.hpp>
 #include <vizkit3d_normal_depth_map/ImageViewerCaptureTool.hpp>
 
@@ -112,7 +112,45 @@ BOOST_AUTO_TEST_CASE(complete_rotate_image) {
 	osg::ref_ptr<osg::Image> osg_image;
 
 	uint width = 640, height = 480;
-	NormalDepthMap normal_depth_map(75.0);
+	float range = 75.0;
+
+	NormalDepthMap normal_depth_map(range);
+
+	osgViewer::Viewer viewer;
+
+	osg::ref_ptr<osg::Group> root = new osg::Group();
+	makeSampleScene(root);
+
+	root = normal_depth_map.applyShaderNormalDepthMap(root);
+
+	viewer.setSceneData(root);
+	viewer.setUpViewInWindow(0,0,width,height);
+
+
+	viewer.realize();
+	double d = 1;
+
+	osg::Matrix m = viewer.getCamera()->getViewMatrix();
+	m.preMult(osg::Matrix::rotate(osg::Quat(osg::DegreesToRadians( 90.0),osg::X_AXIS)));
+
+
+	while(!viewer.done())
+	{
+		m.preMult(osg::Matrix::rotate(osg::Quat(osg::DegreesToRadians(-d),osg::Z_AXIS)));
+		viewer.getCamera()->setViewMatrix(m);
+		viewer.frame();
+	}
+}
+
+
+BOOST_AUTO_TEST_CASE(complete_rotate_image_with_capture) {
+
+	osg::ref_ptr<osg::Image> osg_image;
+
+	uint width = 640, height = 480;
+	float range = 75.0;
+
+	NormalDepthMap normal_depth_map(range);
 
 	osgViewer::Viewer viewer;
 
