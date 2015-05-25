@@ -47,7 +47,6 @@ cv::Mat ScanSonar::decodeShaderImage(cv::Mat raw_image) {
 	bins_depth.convertTo(bins_depth, CV_32S);
 
 	// calculate bins intensities using normal values, depth histogram and sigmoid function
-	// It will be needed to optimize this part yet
 	for(int i=0; i<raw_image.rows; i++)
 		for(int j=0; j<raw_image.cols; j++) {
 			int id_bin = shader[1].at<float>(i,j) / interval;
