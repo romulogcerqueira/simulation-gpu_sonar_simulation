@@ -1,3 +1,10 @@
+/*
+ * SonarUtils.cpp
+ *
+ *  Created on: Apr 29, 2015
+ *      Author: romulogcerqueira
+ */
+
 #include "SonarUtils.hpp"
 #include <iostream>
 
@@ -15,15 +22,6 @@ cv::Mat convertShaderOSG2CV(osg::ref_ptr<osg::Image> osg_image) {
 	cv::flip(cvImage, cvImage, 0);
 
 	return cvImage;
-}
-
-// Create a transformation matrix to simulate the 360º scanning sonar reader
-osg::Matrix getScanMatrix(const osg::Matrix src, double deg) {
-	osg::Matrix dst = src;
-
-	dst.preMult(osg::Matrix::rotate(osg::Quat(osg::DegreesToRadians(-deg), osg::Z_AXIS)));
-
-	return dst;
 }
 
 }
