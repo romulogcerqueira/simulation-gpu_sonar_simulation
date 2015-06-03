@@ -30,10 +30,10 @@ cv::Mat ScanSonar::decodeShaderImage(cv::Mat raw_image) {
 		exit(0);
 	}
 
-	float interval = 1.0 / (float) _number_of_bins;
+	float interval = 1.0 / (float) number_of_bins;
 
 	cv::Mat bins_depth;
-	cv::Mat bins_normal = cv::Mat::zeros(_number_of_bins, 1, CV_32F);
+	cv::Mat bins_normal = cv::Mat::zeros(number_of_bins, 1, CV_32F);
 
 	// calculate depth histogram
 	std::vector<cv::Mat> shader;
@@ -43,14 +43,14 @@ cv::Mat ScanSonar::decodeShaderImage(cv::Mat raw_image) {
 	float range[] = {0.0f, 1.0f};
 	const float *hist_range = {range};
 
-	cv::calcHist(&shader[1], 1, 0, cv::Mat(), bins_depth, 1, &_number_of_bins, &hist_range);
+	cv::calcHist(&shader[1], 1, 0, cv::Mat(), bins_depth, 1, &number_of_bins, &hist_range);
 	bins_depth.convertTo(bins_depth, CV_32S);
 
 	// calculate bins intensities using normal values, depth histogram and sigmoid function
 	for(int i=0; i<raw_image.rows; i++)
 		for(int j=0; j<raw_image.cols; j++) {
 			int id_bin = shader[1].at<float>(i,j) / interval;
-			if (id_bin == _number_of_bins) id_bin--;
+			if (id_bin == number_of_bins) id_bin--;
 			if (shader[0].at<float>(i,j) > 0)
 				bins_normal.at<float>(id_bin) += (1.0 / (float) bins_depth.at<int>(id_bin)) * sigmoid(shader[0].at<float>(i,j));
 		}
@@ -69,34 +69,49 @@ std::vector<uint8_t> ScanSonar::getPingData(cv::Mat raw_intensity) {
 }
 
 
-// The sonar receiver has an dynamic range (0..80dB = 0..255). Two parameters are used by
-// Sonar in 'mtHeadCommand': ad_low, which sets the Lower boundary of the sampling window,
-// it can be increased to make the Sonar display less sensitive and filter out background
-// and receiver self noise; and ad_span sets the width of the sampling window and therefore
-// acts as a Contrast control.
-std::vector<uint8_t> ScanSonar::applyDynamicRangeControl(std::vector<uint8_t> data, uint8_t ad_low, uint8_t ad_span){
-
-	for(uint i=0; i<data.size(); i++)
-	{
-		if (data[i] <= ad_low)
-			data[i] = 0;
-		else if (data[i] >= ad_low + ad_span)
-			data[i] = 255;
-		else
-			data[i] = (uint8_t) ((double)(data[i]-ad_low)*255.0/(double)ad_span);
-	}
-	return data;
-}
-
 // Simulate a base::samples::SonarBeam data and update the sonar head position
-base::samples::SonarBeam ScanSonar::simulateSonarBeam (std::vector<uint8_t> data, float step_angle)
-{
+base::samples::SonarBeam ScanSonar::simulateSonarBeam (std::vector<uint8_t> data, float step_angle) {
 	base::samples::SonarBeam beam;
 
-	beam.bearing = base::Angle::fromDeg(_bearing);
+	beam.time = base::Time::now();
+	beam.speed_of_sound = 1500.0;
+
+	beam.bearing = base::Angle::fromDeg(-bearing + 90.0);
 	beam.beam = data;
 
-	_bearing += step_angle;
+	// if ping_pong is false, the sonar scans from left_limit to right_limit in loop
+	if (!ping_pong_mode)
+	{
+		bearing += step_angle;
+
+		if(bearing > right_limit)
+			bearing = left_limit;
+	}
+
+	// otherwise, the sonar scans from left_limit to right_limit and vice versa in loop
+	else
+	{
+		// it scans from left_limit to right_limit
+		if(!reverse_scan) {
+			bearing += step_angle;
+
+			if(bearing > right_limit){
+				bearing = right_limit;
+				reverse_scan = true;
+			}
+		}
+
+		// it scans from right_limit to left_limit
+		else
+		{
+			bearing -= step_angle;
+
+			if(bearing < left_limit) {
+				bearing = left_limit;
+				reverse_scan = false;
+			}
+		}
+	}
 
 	return beam;
 
