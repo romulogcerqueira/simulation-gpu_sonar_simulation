@@ -25,68 +25,116 @@ class ScanSonar {
 
 public:
 	ScanSonar():
-		number_of_bins(500),
-		bearing(-90.0),
-		left_limit(-90.0),
-		right_limit(90.0),
-		ping_pong_mode(true),
-		reverse_scan(false)
+		_number_of_bins(500),
+		_bearing(0.0f),
+		_left_limit(0.0f),
+		_right_limit(360.0f),
+		_speed_of_sound(1500.0f),
+		_range(50.0f),
+		_step_angle(1.8f),
+		_beamwidth_horizontal(3.0f),
+		_beamwidth_vertical(35.0f),
+		_ping_pong_mode(false),
+		_reverse_scan(false)
 		{};
 
 	cv::Mat decodeShaderImage(cv::Mat raw_image);
 	std::vector<uint8_t> getPingData(cv::Mat raw_intensity);
-	base::samples::SonarBeam simulateSonarBeam (std::vector<uint8_t> data, float step_angle);
+	uint16_t getADInterval();
+	base::samples::SonarBeam simulateSonarBeam (std::vector<uint8_t> data);
 
 
 	int getNumberOfBins() const {
-		return number_of_bins;
+		return _number_of_bins;
 	}
 
 	void setNumberOfBins(int numberOfBins) {
-		number_of_bins = numberOfBins;
+		_number_of_bins = numberOfBins;
 	}
 
 	bool isReverseScan() const {
-		return reverse_scan;
+		return _reverse_scan;
 	}
 
 	void setReverseScan(bool reverseScan) {
-		reverse_scan = reverseScan;
+		_reverse_scan = reverseScan;
 	}
 
-	double getLeftLimit() const {
-		return left_limit;
+	float getLeftLimit() const {
+		return _left_limit;
 	}
 
-	void setLeftLimit(double leftLimit) {
-		left_limit = leftLimit;
+	void setLeftLimit(float leftLimit) {
+		_left_limit = leftLimit;
 	}
 
 	bool isPingPongMode() const {
-		return ping_pong_mode;
+		return _ping_pong_mode;
 	}
 
 	void setPingPongMode(bool pingPongMode) {
-		ping_pong_mode = pingPongMode;
+		_ping_pong_mode = pingPongMode;
 	}
 
-	double getRightLimit() const {
-		return right_limit;
+	float getRightLimit() const {
+		return _right_limit;
 	}
 
-	void setRightLimit(double rightLimit) {
-		right_limit = rightLimit;
+	void setRightLimit(float rightLimit) {
+		_right_limit = rightLimit;
 	}
+
+	float getRange() const {
+		return _range;
+	}
+
+	void setRange(float range) {
+		_range = range;
+	}
+
+	float getStepAngle() const {
+		return _step_angle;
+	}
+
+	void setStepAngle(float stepAngle) {
+		_step_angle = stepAngle;
+	}
+
+	float getBeamwidthHorizontal() const {
+		return _beamwidth_horizontal;
+	}
+
+	void setBeamwidthHorizontal(float beamwidthHorizontal) {
+		_beamwidth_horizontal = beamwidthHorizontal;
+	}
+
+	float getBeamwidthVertical() const {
+		return _beamwidth_vertical;
+	}
+
+	void setBeamwidthVertical(float beamwidthVertical) {
+		_beamwidth_vertical = beamwidthVertical;
+	}
+
+	const float min_range = 0.5f;
+	const float max_range = 75.0f;
 
 private:
 	float sigmoid (float value);
 
-	int number_of_bins;
-	double bearing;
-	double left_limit;
-	double right_limit;
-	bool ping_pong_mode;
-	bool reverse_scan;
+	int _number_of_bins;
+
+	float _bearing;
+	float _left_limit;
+	float _right_limit;
+	float _speed_of_sound;
+	float _range;
+	float _step_angle;
+	float _beamwidth_horizontal;
+	float _beamwidth_vertical;
+
+	bool _ping_pong_mode;
+	bool _reverse_scan;
 };
 
 } // end namespace gpu_sonar_simulation

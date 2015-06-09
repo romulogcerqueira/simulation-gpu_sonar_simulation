@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(first_test_case) {
 
 	std::vector<uint8_t> data = sonar.getPingData(raw_intensity);
 
-	base::samples::SonarBeam sonar_beam = sonar.simulateSonarBeam(data, 1.8);
+	base::samples::SonarBeam sonar_beam = sonar.simulateSonarBeam(data);
 }
 
 
