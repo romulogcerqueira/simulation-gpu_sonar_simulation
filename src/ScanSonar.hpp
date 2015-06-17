@@ -25,15 +25,16 @@ class ScanSonar {
 
 public:
 	ScanSonar():
-		_number_of_bins(500),
+		_number_of_bins(600),
 		_bearing(0.0f),
-		_left_limit(0.0f),
-		_right_limit(360.0f),
+		_start_angle(0.0f),
+		_end_angle(360.0f),
 		_speed_of_sound(1500.0f),
 		_range(50.0f),
 		_step_angle(1.8f),
 		_beamwidth_horizontal(3.0f),
 		_beamwidth_vertical(35.0f),
+		_resolution(0.1),
 		_ping_pong_mode(false),
 		_reverse_scan(false)
 		{};
@@ -60,12 +61,12 @@ public:
 		_reverse_scan = reverseScan;
 	}
 
-	float getLeftLimit() const {
-		return _left_limit;
+	float getStartAngle() const {
+		return _start_angle;
 	}
 
-	void setLeftLimit(float leftLimit) {
-		_left_limit = leftLimit;
+	void setStartAngle(float startAngle) {
+		_start_angle = startAngle;
 	}
 
 	bool isPingPongMode() const {
@@ -76,12 +77,12 @@ public:
 		_ping_pong_mode = pingPongMode;
 	}
 
-	float getRightLimit() const {
-		return _right_limit;
+	float getEndAngle() const {
+		return _end_angle;
 	}
 
-	void setRightLimit(float rightLimit) {
-		_right_limit = rightLimit;
+	void setEndAngle(float endAngle) {
+		_end_angle = endAngle;
 	}
 
 	float getRange() const {
@@ -116,8 +117,8 @@ public:
 		_beamwidth_vertical = beamwidthVertical;
 	}
 
-	const float min_range = 0.5f;
-	const float max_range = 75.0f;
+	const float min_range = 1.0f;
+	const float max_range = 100.0f;
 
 private:
 	float sigmoid (float value);
@@ -125,13 +126,14 @@ private:
 	int _number_of_bins;
 
 	float _bearing;
-	float _left_limit;
-	float _right_limit;
+	float _start_angle;
+	float _end_angle;
 	float _speed_of_sound;
 	float _range;
 	float _step_angle;
 	float _beamwidth_horizontal;
 	float _beamwidth_vertical;
+	float _resolution;
 
 	bool _ping_pong_mode;
 	bool _reverse_scan;

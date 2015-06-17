@@ -70,9 +70,9 @@ std::vector<uint8_t> ScanSonar::getPingData(cv::Mat raw_intensity) {
 
 // Calculate the sample time period that is applied to the received Sonar echo signal
 uint16_t ScanSonar::getADInterval() {
-	float travel_time = _range * 2.0 / _speed_of_sound;
-	float sample_time = travel_time / (float) _number_of_bins;
-	uint8_t ad_interval = (uint8_t) ((sample_time / (640 * 1e-9)) + 0.5);
+	double travel_time = _range * 2.0 / _speed_of_sound;
+	double sample_time = travel_time / (double) _number_of_bins;
+	uint16_t ad_interval = (uint16_t) ((sample_time / (640 * 1e-9)) + 0.5);
 
 	return ad_interval;
 }
@@ -84,7 +84,8 @@ base::samples::SonarBeam ScanSonar::simulateSonarBeam (std::vector<uint8_t> data
 
 	beam.time = base::Time::now();
 	beam.bearing = base::Angle::fromDeg(-_bearing + 90.0f);
-	beam.sampling_interval = 640.0 * 1e-9 * getADInterval();
+//	beam.sampling_interval = 640.0 * 1e-9 * getADInterval();
+	beam.sampling_interval = _resolution * 2.0 / _speed_of_sound;
 	beam.speed_of_sound = _speed_of_sound;
 	beam.beamwidth_horizontal = base::Angle::deg2Rad(_beamwidth_horizontal);
 	beam.beamwidth_vertical = base::Angle::deg2Rad(_beamwidth_vertical);
@@ -95,8 +96,8 @@ base::samples::SonarBeam ScanSonar::simulateSonarBeam (std::vector<uint8_t> data
 	{
 		_bearing += _step_angle;
 
-		if(_bearing > _right_limit)
-			_bearing = _left_limit;
+		if(_bearing > _end_angle)
+			_bearing = _start_angle;
 	}
 
 	// otherwise, the sonar scans from _left_limit to _right_limit and vice versa in loop
@@ -106,8 +107,8 @@ base::samples::SonarBeam ScanSonar::simulateSonarBeam (std::vector<uint8_t> data
 		if(!_reverse_scan) {
 			_bearing += _step_angle;
 
-			if(_bearing > _right_limit){
-				_bearing = _right_limit;
+			if(_bearing > _end_angle){
+				_bearing = _end_angle;
 				_reverse_scan = true;
 			}
 		}
@@ -117,8 +118,8 @@ base::samples::SonarBeam ScanSonar::simulateSonarBeam (std::vector<uint8_t> data
 		{
 			_bearing -= _step_angle;
 
-			if(_bearing < _left_limit) {
-				_bearing = _left_limit;
+			if(_bearing < _start_angle) {
+				_bearing = _start_angle;
 				_reverse_scan = false;
 			}
 		}
