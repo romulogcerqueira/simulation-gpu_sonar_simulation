@@ -34,14 +34,13 @@ public:
 		_step_angle(1.8f),
 		_beamwidth_horizontal(3.0f),
 		_beamwidth_vertical(35.0f),
-		_resolution(0.1),
 		_ping_pong_mode(false),
 		_reverse_scan(false)
 		{};
 
 	cv::Mat decodeShaderImage(cv::Mat raw_image);
 	std::vector<uint8_t> getPingData(cv::Mat raw_intensity);
-	uint16_t getADInterval();
+	double getSamplingInterval();
 	base::samples::SonarBeam simulateSonarBeam (std::vector<uint8_t> data);
 
 
@@ -133,7 +132,6 @@ private:
 	float _step_angle;
 	float _beamwidth_horizontal;
 	float _beamwidth_vertical;
-	float _resolution;
 
 	bool _ping_pong_mode;
 	bool _reverse_scan;

@@ -69,12 +69,10 @@ std::vector<uint8_t> ScanSonar::getPingData(cv::Mat raw_intensity) {
 }
 
 // Calculate the sample time period that is applied to the received Sonar echo signal
-uint16_t ScanSonar::getADInterval() {
+double ScanSonar::getSamplingInterval() {
 	double travel_time = _range * 2.0 / _speed_of_sound;
-	double sample_time = travel_time / (double) _number_of_bins;
-	uint16_t ad_interval = (uint16_t) ((sample_time / (640 * 1e-9)) + 0.5);
+	return travel_time / (double) _number_of_bins;
 
-	return ad_interval;
 }
 
 
@@ -84,8 +82,7 @@ base::samples::SonarBeam ScanSonar::simulateSonarBeam (std::vector<uint8_t> data
 
 	beam.time = base::Time::now();
 	beam.bearing = base::Angle::fromDeg(-_bearing + 90.0f);
-//	beam.sampling_interval = 640.0 * 1e-9 * getADInterval();
-	beam.sampling_interval = _resolution * 2.0 / _speed_of_sound;
+	beam.sampling_interval = getSamplingInterval();
 	beam.speed_of_sound = _speed_of_sound;
 	beam.beamwidth_horizontal = base::Angle::deg2Rad(_beamwidth_horizontal);
 	beam.beamwidth_vertical = base::Angle::deg2Rad(_beamwidth_vertical);
