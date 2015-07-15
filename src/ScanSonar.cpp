@@ -72,7 +72,6 @@ std::vector<uint8_t> ScanSonar::getPingData(cv::Mat raw_intensity) {
 double ScanSonar::getSamplingInterval() {
 	double travel_time = _range * 2.0 / _speed_of_sound;
 	return travel_time / (double) _number_of_bins;
-
 }
 
 
