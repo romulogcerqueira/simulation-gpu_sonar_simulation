@@ -10,6 +10,8 @@
   <depend package="base/types" />
   <depend package="opencv" />
   <depend package="gui/vizkit3d_normal_depth_map" /> 
+  <depend package="gui/vizkit3d_world" />
+ 
   
   <!-- osg dependencies -->
   <rosdep name="osg" />

@@ -1,10 +1,3 @@
-/*
- * MicronSim_test.cpp
- *
- *  Created on: Apr 9, 2015
- *      Author: romulo
- */
-
 #include <gpu_sonar_simulation/ScanSonar.hpp>
 #include <gpu_sonar_simulation/SonarUtils.hpp>
 #include <vizkit3d_normal_depth_map/NormalDepthMap.hpp>
@@ -12,25 +5,18 @@
 
 #include <iostream>
 #include <stdio.h>
+#include <cstdlib>
 
 #include <osg/Geode>
 #include <osg/Group>
 #include <osg/ShapeDrawable>
+#include <osg/Transform>
+#include <osg/MatrixTransform>
+#include <osgDB/ReadFile>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-
-#include <osgDB/ReadFile>
-#include <osg/Node>
-#include <osg/Transform>
-
-#include <osgOcean/Version>
-#include <osgOcean/OceanScene>
-#include <osgOcean/FFTOceanSurface>
-#include <osgOcean/SiltEffect>
-#include <osgOcean/ShaderManager>
-
 
 #define BOOST_TEST_MODULE "SonarSim_test"
 #include <boost/test/unit_test.hpp>
@@ -54,53 +40,43 @@ cv::Mat createRandomImage(int rows, int cols) {
 	return raw_image;
 }
 
-//draw the scene with a small ball in the center with a big cube, Box and cone in back
-void makeSampleScene(osg::ref_ptr<osg::Group> root) {
-
-    osg::Geode *object = new osg::Geode();
-
-	object->addDrawable(new osg::ShapeDrawable(new osg::Sphere(osg::Vec3(0,-20,0), 1)));
-	object->addDrawable(new osg::ShapeDrawable(new osg::Cylinder(osg::Vec3( 40,0,0), 1, 1)));
-	object->addDrawable(new osg::ShapeDrawable(new osg::Sphere(osg::Vec3( 0,60,0), 1)));
-	object->addDrawable(new osg::ShapeDrawable(new osg::Cylinder(osg::Vec3(-80,0,0), 1, 1)));
-
-
-	root->addChild(object);
+// get the value of an environment variable
+std::string getEnvVar(std::string env_name)
+{
+	const char* env_p = std::getenv(env_name.c_str());
+	std::string result(env_p);
+	return result;
 }
 
-//draw the scene with a small ball in the center with a big cube, Box and cone in back
-void makeManifold(osg::ref_ptr<osg::Group> root) {
 
-	osg::Node* manifold = osgDB::readNodeFile("/home/romulogc/flatfish_meshs/simple_manifold/model.dae");
+// add an oil rig manifold to the scene
+void addOilRig(osg::ref_ptr<osg::Group> root){
+
+	std::string rock_path = getEnvVar("AUTOPROJ_CURRENT_ROOT");
+	osg::Node* oilring = osgDB::readNodeFile(rock_path + "/simulation/gpu_sonar_simulation/test_data/oil_rig_manifold/visual.dae");
 
 	osg::Matrix mtransf;
-	mtransf.preMult(osg::Matrix::scale(0.01f,0.01f,0.01f));
+	mtransf.preMult(osg::Matrix::translate(0, 13, 0));
+	mtransf.preMult(osg::Matrix::scale(0.1f,0.1f,0.1f));
 	osg::MatrixTransform *ptransform = new osg::MatrixTransform();
 	ptransform->setMatrix(mtransf);
-	ptransform->addChild(manifold);
+	ptransform->addChild(oilring);
 
 	root->addChild(ptransform);
 }
-
 
 BOOST_AUTO_TEST_CASE(first_test_case) {
 
 	using namespace gpu_sonar_simulation_MicronSim;
 
 	ScanSonar sonar;
-
 	sonar.setNumberOfBins(5);
-
 	cv::Mat raw_image = createRandomImage(4, 4);
-
 	vector<cv::Mat> channels(3);
 	split(raw_image, channels);
-
 	cv::Mat raw_intensity = sonar.decodeShaderImage(raw_image);
-
 	std::vector<uint8_t> data = sonar.getPingData(raw_intensity);
-
-	base::samples::SonarBeam sonar_beam = sonar.simulateSonarBeam(data, 1.8);
+	base::samples::SonarBeam sonar_beam = sonar.simulateSonarBeam(data);
 }
 
 
@@ -108,8 +84,7 @@ BOOST_AUTO_TEST_CASE(complete_rotate_image) {
 
 	osg::ref_ptr<osg::Image> osg_image;
 
-	// ======================== INIT SCENE ========================
-
+	// init scene
 	uint resolution = 600;
 	float viewX = 3.0, viewY = 35.0;
 	double range = 60.0, degree = 1.8;
@@ -121,112 +96,85 @@ BOOST_AUTO_TEST_CASE(complete_rotate_image) {
 	capture.setBackgroundColor(osg::Vec4d(0, 0, 0, 0));
 
 	osg::ref_ptr<osg::Group> root = new osg::Group();
-//	makeSampleScene(root);
-	makeManifold(root);
-
+	addOilRig(root);
 	normal_depth_map.addNodeChild(root);
 
-	osgViewer::Viewer viewer;
+	double rot = 0.0;
 
-	osg::ref_ptr<osgOcean::OceanScene> _oceanScene;
+	double transX = 0.0;
+	double transY = 0.0;
+	double transZ = 0.0;
 
+	while(true)
+	{
+		// transformation matrixes
+		osg::Matrixd matrix;
+		matrix.setTrans(osg::Vec3(transX, transY, transZ));
+		matrix.setRotate(osg::Quat(rot, osg::Vec3(0, 0, 1)));
+		matrix.invert(matrix);
 
-	// ======================= CORRECT SCENE =======================
-
-//	osg::Matrix m = capture.getViewMatrix();
-//	m.preMult(osg::Matrix::rotate(osg::Quat(osg::DegreesToRadians(90.0), osg::X_AXIS)));
-////	m.preMult(osg::Matrix::translate(500.0f, 0.0f, 0.0f));
-//
-//
-//	capture.setViewMatrix(m);
-
-	// ======================= GRAB CAPTURE =======================
-
-
-//	bool loop = true;
-//	while(loop)
-//	{
-//
-//		osg::ref_ptr<osg::Image> osgImage = capture.grabImage(normal_depth_map.getNormalDepthMapNode());
-//
-//
-//
-//		// ======================= SONAR SIMULATION =======================
-//
-//		cv::Mat3f cvImage = convertShaderOSG2CV(osgImage);
-//		cv::Mat raw_intensity = sonar.decodeShaderImage(cvImage);
-//
-//
-//		// ======================= ROTATE THE CAMERA =======================
-//
-//		cv::imshow("teste", cvImage);
-//
-//		char k = cv::waitKey(0);
-//
-//		switch(k)
-//		{
-//			case 27: // ESC
-//				loop = false;
-//				break;
-//
-//			case 82: // UP
-//				std::cout << "UP Pressed! +X" << std::endl;
-//				m.preMult(osg::Matrix::translate(10.0f, 0.0f, 0.0f));
-////				m.preMult(osg::Matrix::rotate(osg::Quat(osg::DegreesToRadians(15.0), osg::X_AXIS)));
-//				break;
-//
-//			case 84: // DOWN
-//				std::cout << "DOWN Pressed! -X" << std::endl;
-//				m.preMult(osg::Matrix::translate(-10.0f, 0.0f, 0.0f));
-////				m.preMult(osg::Matrix::rotate(osg::Quat(osg::DegreesToRadians(-15.0), osg::X_AXIS)));
-//				break;
-//
-//			case 83: // RIGHT
-//				std::cout << "RIGHT Pressed! +Y" << std::endl;
-//				m.preMult(osg::Matrix::translate(0.0f, 10.0f, 0.0f));
-////				m.preMult(osg::Matrix::rotate(osg::Quat(osg::DegreesToRadians(15.0), osg::Y_AXIS)));
-//				break;
-//
-//			case 81: // LEFT
-//				std::cout << "LEFT Pressed! -Y" << std::endl;
-//				m.preMult(osg::Matrix::translate(0.0f,-10.0f, 0.0f));
-////				m.preMult(osg::Matrix::rotate(osg::Quat(osg::DegreesToRadians(-15.0), osg::Y_AXIS)));
-//				break;
-//
-//			case 85: // PAGE_UP
-//				std::cout << "PAGE_UP Pressed! +Z" << std::endl;
-//				m.preMult(osg::Matrix::translate(0.0f, 0.0f, 10.0f));
-////				m.preMult(osg::Matrix::rotate(osg::Quat(osg::DegreesToRadians(15.0), osg::Z_AXIS)));
-//				break;
-//
-//			case 86: // PAGE_DOWN
-//				std::cout << "PAGE_DOWN Pressed! -Z" << std::endl;
-//				m.preMult(osg::Matrix::translate(0.0f, 0.0f, -10.0f));
-////				m.preMult(osg::Matrix::rotate(osg::Quat(osg::DegreesToRadians(-15.0), osg::Z_AXIS)));
-//				break;
-//
-//			default:
-//				std::cout << "Rotate!" << std::endl;
-//				m.preMult(osg::Matrix::rotate(osg::Quat(osg::DegreesToRadians(-degree), osg::Z_AXIS)));
-//				break;
-//		}
-//
-//		capture.setViewMatrix(m);
-//
-//
-//
-//
-//
-//	}
-
-	viewer.setSceneData(normal_depth_map.getNormalDepthMapNode());
-	viewer.setUpViewInWindow( 150,150,800,600, 0 );
-	viewer.run();
+		osg::Matrixd rock_coordinate_system =
+				osg::Matrixd::rotate(-M_PI_2, osg::Vec3(0, 0, -1)) *
+				osg::Matrixd::rotate(-M_PI_2, osg::Vec3(1, 0, 0));
 
 
+		osg::Matrixd m = matrix * rock_coordinate_system;
+		osg::Vec3 eye, center, up;
+		m.getLookAt(eye, center, up);
+		capture.setCameraPosition(eye, center, up);
 
 
+		// grab capture
+		osg::ref_ptr<osg::Image> osgImage = capture.grabImage(normal_depth_map.getNormalDepthMapNode());
+		cv::Mat3f cvImage = convertShaderOSG2CV(osgImage);
 
+		cv::imshow("Normal Depth Map", cvImage);
+		char k = cv::waitKey(0);
+
+		switch(k)
+		{
+
+			case 27:		//	ESC
+				exit(0);
+				break;
+			case 85:		// UP
+				transZ += 2.0f;
+				break;
+			case 86:		// DOWN
+				transZ -= 2.0f;
+				break;
+			case 81:		// LEFT
+				transY += 2.0f;
+				break;
+			case 83:		// RIGHT
+				transY -= 2.0f;
+				break;
+			case 82:		// PAGE UP
+				transX += 2.0f;
+				break;
+			case 84:		// PAGE DOWN
+				transX -= 2.0f;
+				break;
+			case 122:		// Z
+				rot += osg::DegreesToRadians(5.0);
+				break;
+			case 120:		// X
+				rot -= osg::DegreesToRadians(5.0);
+				break;
+
+		}
+
+		std::cout << "--- camera params ---" << std::endl;
+		std::cout << "trans  : " << transX << "," << transY << "," << transZ << std::endl;
+		std::cout << "eye    : " << eye.x() << "," << eye.y() << "," << eye.z() << std::endl;
+		std::cout << "center : " << center.x() << "," << center.y() << "," << center.z() << std::endl;
+		std::cout << "up     : " << up.x() << "," << up.y() << "," << up.z() << std::endl;
+	}
+
+//	osgViewer::Viewer viewer;
+//	viewer.setUpViewInWindow(0,0,600,600);
+//	viewer.setSceneData(normal_depth_map.getNormalDepthMapNode());
+//	viewer.run();
 }
 
 BOOST_AUTO_TEST_SUITE_END();
