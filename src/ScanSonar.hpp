@@ -8,49 +8,27 @@
 #ifndef _SCANSONAR_HPP_
 #define _SCANSONAR_HPP_
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-
-#include <base/samples/SonarBeam.hpp>
-#include <base/Angle.hpp>
-
-#include <vector>
-
-using namespace cv;
-using namespace std;
+#include "SimSonar.hpp"
 
 namespace gpu_sonar_simulation {
-class ScanSonar {
+class ScanSonar : public SimSonar {
 
 public:
+
 	ScanSonar():
-		_number_of_bins(600),
+		SimSonar(),
 		_bearing(0.0f),
 		_start_angle(0.0f),
 		_end_angle(360.0f),
-		_speed_of_sound(1500.0f),
-		_range(50.0f),
 		_step_angle(1.8f),
-		_beamwidth_horizontal(3.0f),
-		_beamwidth_vertical(35.0f),
 		_ping_pong_mode(false),
 		_reverse_scan(false)
-		{};
+	{
+		_beamwidth_horizontal = 3.0f;
+		_beamwidth_vertical = 35.0f;
+	};
 
-	cv::Mat decodeShaderImage(cv::Mat raw_image);
-	std::vector<uint8_t> getPingData(cv::Mat raw_intensity);
-	double getSamplingInterval();
 	base::samples::SonarBeam simulateSonarBeam (std::vector<uint8_t> data);
-
-
-	int getNumberOfBins() const {
-		return _number_of_bins;
-	}
-
-	void setNumberOfBins(int numberOfBins) {
-		_number_of_bins = numberOfBins;
-	}
 
 	bool isReverseScan() const {
 		return _reverse_scan;
@@ -84,14 +62,6 @@ public:
 		_end_angle = endAngle;
 	}
 
-	float getRange() const {
-		return _range;
-	}
-
-	void setRange(float range) {
-		_range = range;
-	}
-
 	float getStepAngle() const {
 		return _step_angle;
 	}
@@ -100,38 +70,11 @@ public:
 		_step_angle = stepAngle;
 	}
 
-	float getBeamwidthHorizontal() const {
-		return _beamwidth_horizontal;
-	}
-
-	void setBeamwidthHorizontal(float beamwidthHorizontal) {
-		_beamwidth_horizontal = beamwidthHorizontal;
-	}
-
-	float getBeamwidthVertical() const {
-		return _beamwidth_vertical;
-	}
-
-	void setBeamwidthVertical(float beamwidthVertical) {
-		_beamwidth_vertical = beamwidthVertical;
-	}
-
-	const float min_range = 1.0f;
-	const float max_range = 100.0f;
-
 private:
-	float sigmoid (float value);
-
-	int _number_of_bins;
-
 	float _bearing;
 	float _start_angle;
 	float _end_angle;
-	float _speed_of_sound;
-	float _range;
 	float _step_angle;
-	float _beamwidth_horizontal;
-	float _beamwidth_vertical;
 
 	bool _ping_pong_mode;
 	bool _reverse_scan;

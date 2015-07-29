@@ -14,11 +14,7 @@
 #include <osg/MatrixTransform>
 #include <osgDB/ReadFile>
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-
-#define BOOST_TEST_MODULE "SonarSim_test"
+#define BOOST_TEST_MODULE "ScanSonar_test"
 #include <boost/test/unit_test.hpp>
 
 using namespace gpu_sonar_simulation;
@@ -27,6 +23,13 @@ using namespace vizkit3d_normal_depth_map;
 BOOST_AUTO_TEST_SUITE(gpu_sonar_simulation_MicronSim)
 
 #define myrand ((float)(random())/(float)(RAND_MAX) )
+
+// get the value of an environment variable
+std::string getEnvVar(std::string env_name) {
+	const char* env_p = std::getenv(env_name.c_str());
+	std::string result(env_p);
+	return result;
+}
 
 // create a depth and normal matrixes to test
 cv::Mat createRandomImage(int rows, int cols) {
@@ -39,15 +42,6 @@ cv::Mat createRandomImage(int rows, int cols) {
 
 	return raw_image;
 }
-
-// get the value of an environment variable
-std::string getEnvVar(std::string env_name)
-{
-	const char* env_p = std::getenv(env_name.c_str());
-	std::string result(env_p);
-	return result;
-}
-
 
 // add an oil rig manifold to the scene
 void addOilRig(osg::ref_ptr<osg::Group> root){
@@ -100,7 +94,6 @@ BOOST_AUTO_TEST_CASE(complete_rotate_image) {
 	normal_depth_map.addNodeChild(root);
 
 	double rot = 0.0;
-
 	double transX = 0.0;
 	double transY = 0.0;
 	double transZ = 0.0;
