@@ -5,8 +5,8 @@
  *      Author: romulogcerqueira
  */
 
-#ifndef _SONARUTILS_HPP_
-#define _SONARUTILS_HPP_
+#ifndef _UTILS_HPP_
+#define _UTILS_HPP_
 
 #include <osg/Image>
 
@@ -14,8 +14,9 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 namespace gpu_sonar_simulation{
-	cv::Mat 	convertShaderOSG2CV(osg::ref_ptr<osg::Image> osg_image);
+	cv::Mat convertShaderOSG2CV(osg::ref_ptr<osg::Image> osg_image);
 	std::vector<uint8_t> applyDynamicRangeControl(std::vector<uint8_t> data, uint8_t ad_low, uint8_t ad_span);
-
+	cv::Mat plotNormalHistogram(cv::Mat raw_image, int bins);
+	cv::Mat plotDepthHistogram(cv::Mat raw_image, int bins);
 }
 #endif

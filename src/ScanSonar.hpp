@@ -8,15 +8,15 @@
 #ifndef _SCANSONAR_HPP_
 #define _SCANSONAR_HPP_
 
-#include "SimSonar.hpp"
+#include "CommonSonar.hpp"
 
 namespace gpu_sonar_simulation {
-class ScanSonar : public SimSonar {
+class ScanSonar : public CommonSonar {
 
 public:
 
 	ScanSonar():
-		SimSonar(),
+		CommonSonar(),
 		_bearing(0.0f),
 		_start_angle(0.0f),
 		_end_angle(360.0f),
@@ -26,9 +26,11 @@ public:
 	{
 		_beamwidth_horizontal = 3.0f;
 		_beamwidth_vertical = 35.0f;
+		_viewer = cv::Mat(500 * 2 + 10, 500 * 2 + 10, CV_8UC3);
 	};
 
 	base::samples::SonarBeam simulateSonarBeam (std::vector<uint8_t> data);
+	void plotSonarData(base::samples::SonarBeam sonar, float range, int gain);
 
 	bool isReverseScan() const {
 		return _reverse_scan;

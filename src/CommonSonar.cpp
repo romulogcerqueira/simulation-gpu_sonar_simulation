@@ -1,4 +1,4 @@
-#include "SimSonar.hpp"
+#include "CommonSonar.hpp"
 #include <iostream>
 
 using namespace gpu_sonar_simulation;
@@ -6,7 +6,7 @@ using namespace gpu_sonar_simulation;
 namespace gpu_sonar_simulation {
 
 // Accepts the input value x then returns it's sigmoid value in float
-float SimSonar::sigmoid(float x) {
+float CommonSonar::sigmoid(float x) {
 
 	float l = 1, k = 18, x0 = 0.666666667;
 	float exp_value;
@@ -20,14 +20,14 @@ float SimSonar::sigmoid(float x) {
 
 // Receive shader image (normal and depth matrixes) and convert to get
 // the bins intensities
-cv::Mat SimSonar::decodeShaderImage(cv::Mat raw_image) {
+cv::Mat CommonSonar::decodeShaderImage(cv::Mat raw_image) {
 
 	if (raw_image.type() != CV_32FC3) {
 		std::cout << "Invalid shader image format!" << std::endl;
 		exit(0);
 	}
 
-	float interval = 1.0 / (float) _number_of_bins;
+	float interval = 1.0 / _number_of_bins * 1.0;
 
 	cv::Mat bins_depth;
 	cv::Mat bins_normal = cv::Mat::zeros(_number_of_bins, 1, CV_32F);
@@ -35,7 +35,6 @@ cv::Mat SimSonar::decodeShaderImage(cv::Mat raw_image) {
 	// calculate depth histogram
 	std::vector<cv::Mat> shader;
 	split(raw_image, shader);
-	shader[1] = 1.0 - shader[1];
 
 	float range[] = { 0.0f, 1.0f };
 	const float *hist_range = { range };
@@ -57,7 +56,7 @@ cv::Mat SimSonar::decodeShaderImage(cv::Mat raw_image) {
 }
 
 // Calculate ping intensity in 8-bit format data
-std::vector<uint8_t> SimSonar::getPingData(cv::Mat raw_intensity) {
+std::vector<uint8_t> CommonSonar::getPingData(cv::Mat raw_intensity) {
 
 	std::vector<uint8_t> ping_intensity;
 	raw_intensity.convertTo(ping_intensity, CV_8U, 255);
@@ -66,7 +65,7 @@ std::vector<uint8_t> SimSonar::getPingData(cv::Mat raw_intensity) {
 }
 
 // Calculate the sample time period that is applied to the received Sonar echo signal
-double SimSonar::getSamplingInterval() {
+double CommonSonar::getSamplingInterval() {
 
 	double travel_time = _range * 2.0 / _speed_of_sound;
 
