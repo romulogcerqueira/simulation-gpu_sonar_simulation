@@ -17,20 +17,17 @@ public:
 
 	MultibeamSonar():
 		CommonSonar(),
-		_start_bearing(-60.0f),
-		_angular_resolution(1.0f),
+		_start_bearing(base::Angle::deg2Rad(-60.0)),
+		_angular_resolution(base::Angle::deg2Rad(1.0)),
 		_number_of_beams(256),
 		_pixels_per_beam(2)
 	{
 		_beamwidth_horizontal = 120.0f;
 		_beamwidth_vertical = 20.0f;
-		_viewer = cv::Mat::zeros(500*2, 500*1.2, CV_8UC3);
 	};
 
 	base::samples::SonarScan simulateSonarScan (std::vector<uint8_t> data);
-	void plotSonarData(base::samples::SonarScan sonar, float range, int gain);
 	std::vector<uint8_t> codeSonarData(cv::Mat3f cv_image);
-	void testDistanceShader(cv::Mat3f image, double maxRange, double maxAngleX);
 
 	int getNumberOfBeams() const {
 		return _number_of_beams;
@@ -48,25 +45,25 @@ public:
 		_pixels_per_beam = pixelsPerBeam;
 	}
 
-	float getAngularResolution() const {
+	double getAngularResolution() const {
 		return _angular_resolution;
 	}
 
-	void setAngularResolution(float angularResolution) {
+	void setAngularResolution(double angularResolution) {
 		_angular_resolution = angularResolution;
 	}
 
-	float getStartBearing() const {
+	double getStartBearing() const {
 		return _start_bearing;
 	}
 
-	void setStartBearing(float startBearing) {
+	void setStartBearing(double startBearing) {
 		_start_bearing = startBearing;
 	}
 
 private:
-	float _start_bearing;
-	float _angular_resolution;
+	double _start_bearing;
+	double _angular_resolution;
 
 	int _number_of_beams;
 	int _pixels_per_beam;

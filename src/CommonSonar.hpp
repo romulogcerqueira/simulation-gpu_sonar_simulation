@@ -29,7 +29,7 @@ public:
 
 	CommonSonar():
 		_number_of_bins(500),
-		_gain(50),
+		_gain(75.0f),
 		_speed_of_sound(1500.0f),
 		_range(50.0f),
 		_beamwidth_horizontal(0.0f),
@@ -80,19 +80,11 @@ public:
 		_speed_of_sound = speedOfSound;
 	}
 
-	const cv::Mat& getViewer() const {
-		return _viewer;
-	}
-
-	void setViewer(const cv::Mat& sonarViewer) {
-		_viewer = sonarViewer;
-	}
-
-	int getGain() const {
+	float getGain() const {
 		return _gain;
 	}
 
-	void setGain(int gain) {
+	void setGain(float gain) {
 		_gain = gain;
 	}
 
@@ -101,14 +93,12 @@ private:
 
 protected:
 	int _number_of_bins;
-	int _gain;
+	float _gain;
 
 	float _speed_of_sound;
 	float _range;
 	float _beamwidth_horizontal;
 	float _beamwidth_vertical;
-
-	cv::Mat _viewer, _output;
 };
 
 } // end namespace gpu_sonar_simulation
