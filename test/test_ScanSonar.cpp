@@ -81,11 +81,11 @@ BOOST_AUTO_TEST_CASE(complete_rotate_image) {
 	// init scene
 	uint resolution = 600;
 	float viewX = 3.0, viewY = 35.0;
-	double range = 60.0, degree = 1.8;
+	double range = 60.0;
 
 	ScanSonar sonar;
 	sonar.setNumberOfBins(500);
-	NormalDepthMap normal_depth_map(range);
+	NormalDepthMap normal_depth_map(range, viewX, viewY);
 	ImageViewerCaptureTool capture(640,480);
 	capture.setBackgroundColor(osg::Vec4d(0, 0, 0, 0));
 

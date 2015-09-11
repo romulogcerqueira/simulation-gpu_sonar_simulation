@@ -5,12 +5,13 @@
  *      Author: romulogcerqueira
  */
 
-#ifndef _SIMSONAR_HPP_
-#define _SIMSONAR_HPP_
+#ifndef _COMMONSONAR_HPP_
+#define _COMMONSONAR_HPP_
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/contrib/contrib.hpp>
 
 #include <base/samples/SonarBeam.hpp>
 #include <base/samples/SonarScan.hpp>
@@ -22,14 +23,15 @@ using namespace cv;
 using namespace std;
 
 namespace gpu_sonar_simulation {
-class SimSonar {
+class CommonSonar {
 
 public:
 
-	SimSonar():
+	CommonSonar():
 		_number_of_bins(500),
+		_gain(75.0f),
 		_speed_of_sound(1500.0f),
-		_range(100.0f),
+		_range(50.0f),
 		_beamwidth_horizontal(0.0f),
 		_beamwidth_vertical(0.0f)
 	{};
@@ -70,14 +72,28 @@ public:
 		_beamwidth_vertical = beamwidthVertical;
 	}
 
-	const float min_range = 1.0f;
-	const float max_range = 300.0f;
+	float getSpeedOfSound() const {
+		return _speed_of_sound;
+	}
+
+	void setSpeedOfSound(float speedOfSound) {
+		_speed_of_sound = speedOfSound;
+	}
+
+	float getGain() const {
+		return _gain;
+	}
+
+	void setGain(float gain) {
+		_gain = gain;
+	}
 
 private:
 	float sigmoid (float value);
 
 protected:
 	int _number_of_bins;
+	float _gain;
 
 	float _speed_of_sound;
 	float _range;

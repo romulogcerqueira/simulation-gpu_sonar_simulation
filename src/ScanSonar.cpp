@@ -2,6 +2,7 @@
 #include <iostream>
 
 using namespace gpu_sonar_simulation;
+using namespace std;
 
 namespace gpu_sonar_simulation {
 
@@ -10,7 +11,7 @@ base::samples::SonarBeam ScanSonar::simulateSonarBeam (std::vector<uint8_t> data
 	base::samples::SonarBeam beam;
 
 	beam.time = base::Time::now();
-	beam.bearing = base::Angle::fromDeg(-_bearing + 90.0f);
+	beam.bearing = base::Angle::fromRad(-_bearing + M_PI_2);
 	beam.sampling_interval = getSamplingInterval();
 	beam.speed_of_sound = _speed_of_sound;
 	beam.beamwidth_horizontal = base::Angle::deg2Rad(_beamwidth_horizontal);

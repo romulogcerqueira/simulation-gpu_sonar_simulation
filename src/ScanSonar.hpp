@@ -8,19 +8,19 @@
 #ifndef _SCANSONAR_HPP_
 #define _SCANSONAR_HPP_
 
-#include "SimSonar.hpp"
+#include "CommonSonar.hpp"
 
 namespace gpu_sonar_simulation {
-class ScanSonar : public SimSonar {
+class ScanSonar : public CommonSonar {
 
 public:
 
 	ScanSonar():
-		SimSonar(),
-		_bearing(0.0f),
-		_start_angle(0.0f),
-		_end_angle(360.0f),
-		_step_angle(1.8f),
+		CommonSonar(),
+		_bearing(0),
+		_start_angle(0),
+		_end_angle(M_PI*2),
+		_step_angle(base::Angle::deg2Rad(1.8)),
 		_ping_pong_mode(false),
 		_reverse_scan(false)
 	{
@@ -38,14 +38,6 @@ public:
 		_reverse_scan = reverseScan;
 	}
 
-	float getStartAngle() const {
-		return _start_angle;
-	}
-
-	void setStartAngle(float startAngle) {
-		_start_angle = startAngle;
-	}
-
 	bool isPingPongMode() const {
 		return _ping_pong_mode;
 	}
@@ -54,27 +46,43 @@ public:
 		_ping_pong_mode = pingPongMode;
 	}
 
-	float getEndAngle() const {
+	double getBearing() const {
+		return _bearing;
+	}
+
+	void setBearing(double bearing) {
+		_bearing = bearing;
+	}
+
+	double getEndAngle() const {
 		return _end_angle;
 	}
 
-	void setEndAngle(float endAngle) {
+	void setEndAngle(double endAngle) {
 		_end_angle = endAngle;
 	}
 
-	float getStepAngle() const {
+	double getStartAngle() const {
+		return _start_angle;
+	}
+
+	void setStartAngle(double startAngle) {
+		_start_angle = startAngle;
+	}
+
+	double getStepAngle() const {
 		return _step_angle;
 	}
 
-	void setStepAngle(float stepAngle) {
+	void setStepAngle(double stepAngle) {
 		_step_angle = stepAngle;
 	}
 
 private:
-	float _bearing;
-	float _start_angle;
-	float _end_angle;
-	float _step_angle;
+	double _bearing;
+	double _start_angle;
+	double _end_angle;
+	double _step_angle;
 
 	bool _ping_pong_mode;
 	bool _reverse_scan;
