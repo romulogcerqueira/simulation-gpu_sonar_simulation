@@ -124,7 +124,7 @@ cv::Mat plotSonarData(base::samples::SonarScan sonar, float range, float gain) {
 	cv::applyColorMap(tempPlot, viewer, COLORMAP_HOT);
 
 	// apply gain
-	float g = gain * 1.0 / 50.0;
+	float g = gain / 0.5;
 	viewer *= g;
 
 	// plot sonar grid
@@ -173,7 +173,7 @@ cv::Mat plotSonarData(base::samples::SonarBeam sonar, float range, float gain, c
 	cv::applyColorMap(viewer, viewer, COLORMAP_HOT);
 
 	// apply gain
-	float g = gain / 50.0;
+	float g = gain / 0.5;
 	viewer *= g;
 
 	// plot grid

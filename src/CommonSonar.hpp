@@ -29,7 +29,7 @@ public:
 
 	CommonSonar():
 		_number_of_bins(500),
-		_gain(75.0f),
+		_gain(0.7f),
 		_speed_of_sound(1500.0f),
 		_range(50.0f),
 		_beamwidth_horizontal(0.0f),
