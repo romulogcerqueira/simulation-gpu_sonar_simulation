@@ -29,15 +29,15 @@ public:
 
 	CommonSonar():
 		_number_of_bins(500),
-		_gain(0.7f),
+		_gain(0.5f),
 		_speed_of_sound(1500.0f),
 		_range(50.0f),
 		_beamwidth_horizontal(0.0f),
 		_beamwidth_vertical(0.0f)
 	{};
 
-	cv::Mat decodeShaderImage(cv::Mat raw_image);
-	std::vector<uint8_t> getPingData(cv::Mat raw_intensity);
+	std::vector<double> decodeShaderImage(cv::Mat raw_image);
+	std::vector<uint8_t> getPingData(std::vector<double> raw_intensity);
 	double getSamplingInterval();
 
 	int getNumberOfBins() const {
@@ -80,16 +80,17 @@ public:
 		_speed_of_sound = speedOfSound;
 	}
 
-	float getGain() const {
-		return _gain;
-	}
+    float getGain() const {
+        return _gain;
+    }
 
-	void setGain(float gain) {
-		_gain = gain;
-	}
+    void setGain(float gain) {
+        _gain = gain;
+    }
 
 private:
-	float sigmoid (float value);
+    float sigmoid(float value);
+    std::vector<double> rescaleIntensity(std::vector<double> bins_normal);
 
 protected:
 	int _number_of_bins;
