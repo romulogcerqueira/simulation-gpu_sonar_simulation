@@ -17,40 +17,31 @@ public:
 
 	MultibeamSonar():
 		CommonSonar(),
-		_start_bearing(base::Angle::deg2Rad(-60.0)),
-		_angular_resolution(base::Angle::deg2Rad(1.0)),
 		_number_of_beams(256),
-		_pixels_per_beam(2)
+		_pixels_per_beam(2),
+		_start_bearing(base::Angle::deg2Rad(-55.0))
 	{
-		_beamwidth_horizontal = 120.0f;
+		_beamwidth_horizontal = 110.0f;
 		_beamwidth_vertical = 20.0f;
 	};
 
-	base::samples::SonarScan simulateSonarScan (std::vector<uint8_t> data);
-	std::vector<uint8_t> codeSonarData(cv::Mat3f cv_image);
+	base::samples::SonarScan simulateSonarScan(const std::vector<uint8_t>& data);
+	std::vector<uint8_t> codeSonarData(const cv::Mat3f& cv_image);
 
-	int getNumberOfBeams() const {
+	unsigned int getNumberOfBeams() const {
 		return _number_of_beams;
 	}
 
-	void setNumberOfBeams(int numberOfBeams) {
+	void setNumberOfBeams(unsigned int numberOfBeams) {
 		_number_of_beams = numberOfBeams;
 	}
 
-	int getPixelsPerBeam() const {
+	unsigned int getPixelsPerBeam() const {
 		return _pixels_per_beam;
 	}
 
-	void setPixelsPerBeam(int pixelsPerBeam) {
+	void setPixelsPerBeam(unsigned int pixelsPerBeam) {
 		_pixels_per_beam = pixelsPerBeam;
-	}
-
-	double getAngularResolution() const {
-		return _angular_resolution;
-	}
-
-	void setAngularResolution(double angularResolution) {
-		_angular_resolution = angularResolution;
 	}
 
 	double getStartBearing() const {
@@ -62,11 +53,10 @@ public:
 	}
 
 private:
-	double _start_bearing;
-	double _angular_resolution;
+	unsigned int _number_of_beams;
+	unsigned int _pixels_per_beam;
 
-	int _number_of_beams;
-	int _pixels_per_beam;
+	double _start_bearing;
 };
 
 } // end namespace gpu_sonar_simulation

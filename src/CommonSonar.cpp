@@ -20,48 +20,61 @@ float CommonSonar::sigmoid(float x) {
 
 // Receive shader image (normal and depth matrixes) and convert to get
 // the bins intensities
-cv::Mat CommonSonar::decodeShaderImage(cv::Mat raw_image) {
+std::vector<double> CommonSonar::decodeShaderImage(const cv::Mat& raw_image) {
 
-	if (raw_image.type() != CV_32FC3) {
-		std::cout << "Invalid shader image format!" << std::endl;
-		exit(0);
-	}
+    if (raw_image.type() != CV_32FC3)
+        std::invalid_argument("Invalid shader image format!");
 
-	float interval = 1.0 / _number_of_bins * 1.0;
+    // the shader has a precision float limitation (1/256 = 0.00390625). So if the
+    // number of bins be more than 256, the depth histogram will present some
+    // "black wholes" and this will reflect on final sonar image. To avoid this problem,
+    // we need to rescale the sonar intensity data applying a linear transformation.
+    int default_bins = 256;
+    std::vector<int> bins_depth(default_bins, 0);
+    std::vector<double> bins_normal(default_bins, 0);
 
-	cv::Mat bins_depth;
-	cv::Mat bins_normal = cv::Mat::zeros(_number_of_bins, 1, CV_32F);
+    // calculate depth histogram
+    for (cv::MatConstIterator_<Vec3f> it = raw_image.begin<Vec3f>(); it != raw_image.end<Vec3f>(); ++it)
+        bins_depth[(*it)[1] * (default_bins - 1)]++;
 
-	// calculate depth histogram
-	std::vector<cv::Mat> shader;
-	split(raw_image, shader);
+    // calculate bins intensities using normal values, depth histogram and sigmoid function
+    for (cv::MatConstIterator_<Vec3f> it = raw_image.begin<Vec3f>(); it != raw_image.end<Vec3f>(); ++it) {
+        int id_bin = (*it)[1] * (default_bins - 1);
+        bins_normal[id_bin] += (1.0 / bins_depth[id_bin]) * sigmoid((*it)[0]);
+    }
 
-	float range[] = { 0.0f, 1.0f };
-	const float *hist_range = { range };
+    return rescaleIntensity(bins_normal);
+}
 
-	cv::calcHist(&shader[1], 1, 0, cv::Mat(), bins_depth, 1, &_number_of_bins, &hist_range);
-	bins_depth.convertTo(bins_depth, CV_32S);
+// Rescale the accumulated normal vector to the number of bins desired
+std::vector<double> CommonSonar::rescaleIntensity(const std::vector<double>& bins_normal) {
 
-	// calculate bins intensities using normal values, depth histogram and sigmoid function
-	for (int i = 0; i < raw_image.rows; i++)
-		for (int j = 0; j < raw_image.cols; j++) {
-			int id_bin = shader[1].at<float>(i, j) / interval;
-			if (id_bin == _number_of_bins)
-				id_bin--;
-			if (shader[0].at<float>(i, j) > 0)
-				bins_normal.at<float>(id_bin) += (1.0 / (float) bins_depth.at<int>(id_bin)) * sigmoid(shader[0].at<float>(i, j));
-		}
+    double rate = _number_of_bins * 1.0 / bins_normal.size();
+    std::vector<double> new_hist(_number_of_bins, 0);
 
-	return bins_normal;
+    for (unsigned int i = 0; i < bins_normal.size() - 1; ++i) {
+        double iNew = i * rate;
+        new_hist[iNew] = bins_normal[i];
+
+        if (bins_normal[i + 1] != 0) {
+            double nextINew = (i + 1) * rate;
+            double local_slope = (bins_normal[i + 1] - bins_normal[i]) / (nextINew - iNew);
+            double local_const = bins_normal[i] - local_slope * iNew;
+            for (double j = iNew + 1; j < nextINew; j += 1.0)
+                new_hist[j] = local_slope * j + local_const;
+        }
+    }
+
+    return new_hist;
 }
 
 // Calculate ping intensity in 8-bit format data
-std::vector<uint8_t> CommonSonar::getPingData(cv::Mat raw_intensity) {
+std::vector<uint8_t> CommonSonar::getPingData(std::vector<double>& raw_intensity) {
 
-	std::vector<uint8_t> ping_intensity;
-	raw_intensity.convertTo(ping_intensity, CV_8U, 255);
+    std::transform(raw_intensity.begin(), raw_intensity.end(), raw_intensity.begin(), std::bind1st(std::multiplies<double>(), 255));
+    std::vector<uint8_t> ping_intensity(raw_intensity.begin(), raw_intensity.end());
 
-	return ping_intensity;
+    return ping_intensity;
 }
 
 // Calculate the sample time period that is applied to the received Sonar echo signal
@@ -69,6 +82,6 @@ double CommonSonar::getSamplingInterval() {
 
 	double travel_time = _range * 2.0 / _speed_of_sound;
 
-	return travel_time / (double) _number_of_bins;
+	return travel_time / _number_of_bins;
 }
 }

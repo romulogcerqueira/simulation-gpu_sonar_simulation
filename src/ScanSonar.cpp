@@ -7,7 +7,7 @@ using namespace std;
 namespace gpu_sonar_simulation {
 
 // Simulate a base::samples::SonarBeam data and update the sonar head position
-base::samples::SonarBeam ScanSonar::simulateSonarBeam (std::vector<uint8_t> data) {
+base::samples::SonarBeam ScanSonar::simulateSonarBeam (const std::vector<uint8_t>& data) {
 	base::samples::SonarBeam beam;
 
 	beam.time = base::Time::now();

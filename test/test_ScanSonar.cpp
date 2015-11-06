@@ -1,5 +1,5 @@
 #include <gpu_sonar_simulation/ScanSonar.hpp>
-#include <gpu_sonar_simulation/SonarUtils.hpp>
+#include <gpu_sonar_simulation/Utils.hpp>
 #include <vizkit3d_normal_depth_map/NormalDepthMap.hpp>
 #include <vizkit3d_normal_depth_map/ImageViewerCaptureTool.hpp>
 
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(first_test_case) {
 	cv::Mat raw_image = createRandomImage(4, 4);
 	vector<cv::Mat> channels(3);
 	split(raw_image, channels);
-	cv::Mat raw_intensity = sonar.decodeShaderImage(raw_image);
+	std::vector<double> raw_intensity = sonar.decodeShaderImage(raw_image);
 	std::vector<uint8_t> data = sonar.getPingData(raw_intensity);
 	base::samples::SonarBeam sonar_beam = sonar.simulateSonarBeam(data);
 }
