@@ -20,12 +20,10 @@ float CommonSonar::sigmoid(float x) {
 
 // Receive shader image (normal and depth matrixes) and convert to get
 // the bins intensities
-std::vector<double> CommonSonar::decodeShaderImage(cv::Mat raw_image) {
+std::vector<double> CommonSonar::decodeShaderImage(const cv::Mat& raw_image) {
 
-    if (raw_image.type() != CV_32FC3) {
-        std::cout << "Invalid shader image format!" << std::endl;
-        exit(0);
-    }
+    if (raw_image.type() != CV_32FC3)
+        std::invalid_argument("Invalid shader image format!");
 
     // the shader has a precision float limitation (1/256 = 0.00390625). So if the
     // number of bins be more than 256, the depth histogram will present some
@@ -36,11 +34,11 @@ std::vector<double> CommonSonar::decodeShaderImage(cv::Mat raw_image) {
     std::vector<double> bins_normal(default_bins, 0);
 
     // calculate depth histogram
-    for (cv::MatIterator_<Vec3f> it = raw_image.begin<Vec3f>(); it != raw_image.end<Vec3f>(); ++it)
+    for (cv::MatConstIterator_<Vec3f> it = raw_image.begin<Vec3f>(); it != raw_image.end<Vec3f>(); ++it)
         bins_depth[(*it)[1] * (default_bins - 1)]++;
 
     // calculate bins intensities using normal values, depth histogram and sigmoid function
-    for (cv::MatIterator_<Vec3f> it = raw_image.begin<Vec3f>(); it != raw_image.end<Vec3f>(); ++it) {
+    for (cv::MatConstIterator_<Vec3f> it = raw_image.begin<Vec3f>(); it != raw_image.end<Vec3f>(); ++it) {
         int id_bin = (*it)[1] * (default_bins - 1);
         bins_normal[id_bin] += (1.0 / bins_depth[id_bin]) * sigmoid((*it)[0]);
     }
@@ -49,12 +47,12 @@ std::vector<double> CommonSonar::decodeShaderImage(cv::Mat raw_image) {
 }
 
 // Rescale the accumulated normal vector to the number of bins desired
-std::vector<double> CommonSonar::rescaleIntensity(std::vector<double> bins_normal) {
+std::vector<double> CommonSonar::rescaleIntensity(const std::vector<double>& bins_normal) {
 
     double rate = _number_of_bins * 1.0 / bins_normal.size();
     std::vector<double> new_hist(_number_of_bins, 0);
 
-    for (int i = 0; i < bins_normal.size() - 1; ++i) {
+    for (unsigned int i = 0; i < bins_normal.size() - 1; ++i) {
         double iNew = i * rate;
         new_hist[iNew] = bins_normal[i];
 
@@ -71,7 +69,7 @@ std::vector<double> CommonSonar::rescaleIntensity(std::vector<double> bins_norma
 }
 
 // Calculate ping intensity in 8-bit format data
-std::vector<uint8_t> CommonSonar::getPingData(std::vector<double> raw_intensity) {
+std::vector<uint8_t> CommonSonar::getPingData(std::vector<double>& raw_intensity) {
 
     std::transform(raw_intensity.begin(), raw_intensity.end(), raw_intensity.begin(), std::bind1st(std::multiplies<double>(), 255));
     std::vector<uint8_t> ping_intensity(raw_intensity.begin(), raw_intensity.end());

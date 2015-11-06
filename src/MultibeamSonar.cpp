@@ -6,7 +6,7 @@ using namespace gpu_sonar_simulation;
 namespace gpu_sonar_simulation {
 
 // Simulate a base::samples::SonarBeam data and update the sonar head position
-base::samples::SonarScan MultibeamSonar::simulateSonarScan(std::vector<uint8_t> data) {
+base::samples::SonarScan MultibeamSonar::simulateSonarScan(const std::vector<uint8_t>& data) {
 
 	base::samples::SonarScan sonar_scan;
 
@@ -29,7 +29,7 @@ base::samples::SonarScan MultibeamSonar::simulateSonarScan(std::vector<uint8_t> 
 // Split image in beam parts. The shader is not radially spaced equally
 // over the FOV-X degree sector, so it is necessary to identify which column
 // is contained on each beam.
-std::vector<uint8_t> MultibeamSonar::codeSonarData(cv::Mat3f cv_image) {
+std::vector<uint8_t> MultibeamSonar::codeSonarData(const cv::Mat3f& cv_image) {
 
 	std::vector<cv::Mat> shader;
 	cv::split(cv_image, shader);

@@ -28,7 +28,7 @@ cv::Mat convertShaderOSG2CV(osg::ref_ptr<osg::Image> osg_image) {
 // it can be increased to make the Sonar display less sensitive and filter out background
 // and receiver self noise; and ad_span sets the width of the sampling window and therefore
 // acts as a Contrast control.
-std::vector<uint8_t> applyDynamicRangeControl(std::vector<uint8_t> data, uint8_t ad_low, uint8_t ad_span) {
+void applyDynamicRangeControl(std::vector<uint8_t>& data, uint8_t ad_low, uint8_t ad_span) {
 
 	for (uint i = 0; i < data.size(); i++) {
 		if (data[i] <= ad_low)
@@ -38,11 +38,10 @@ std::vector<uint8_t> applyDynamicRangeControl(std::vector<uint8_t> data, uint8_t
 		else
 			data[i] = (uint8_t) ((double) (data[i] - ad_low) * 255.0 / (double) ad_span);
 	}
-	return data;
 }
 
 // Plot the accumulated intensity as an histogram
-cv::Mat plotNormalHistogram(cv::Mat raw_intensity, int bins) {
+cv::Mat plotNormalHistogram(const cv::Mat& raw_intensity, int bins) {
 
 	double max;
 	cv::minMaxIdx(raw_intensity, NULL, &max);
@@ -60,7 +59,7 @@ cv::Mat plotNormalHistogram(cv::Mat raw_intensity, int bins) {
 }
 
 // Plot the depth as an histogram
-cv::Mat plotDepthHistogram(cv::Mat raw_image, int bins) {
+cv::Mat plotDepthHistogram(const cv::Mat& raw_image, int bins) {
 
 	if (raw_image.type() != CV_32FC3) {
 		std::cout << "Invalid shader image format!" << std::endl;

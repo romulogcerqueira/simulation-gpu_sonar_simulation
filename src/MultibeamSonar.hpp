@@ -25,8 +25,8 @@ public:
 		_beamwidth_vertical = 20.0f;
 	};
 
-	base::samples::SonarScan simulateSonarScan (std::vector<uint8_t> data);
-	std::vector<uint8_t> codeSonarData(cv::Mat3f cv_image);
+	base::samples::SonarScan simulateSonarScan(const std::vector<uint8_t>& data);
+	std::vector<uint8_t> codeSonarData(const cv::Mat3f& cv_image);
 
 	unsigned int getNumberOfBeams() const {
 		return _number_of_beams;
