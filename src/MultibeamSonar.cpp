@@ -6,7 +6,7 @@ using namespace gpu_sonar_simulation;
 namespace gpu_sonar_simulation {
 
 // Simulate a base::samples::SonarBeam data and update the sonar head position
-base::samples::Sonar MultibeamSonar::simulateMultibeamSonar(const std::vector<float>& data) {
+base::samples::Sonar MultibeamSonar::simulateMultiBeam(const std::vector<float>& data) {
 
     base::samples::Sonar sonar;
 

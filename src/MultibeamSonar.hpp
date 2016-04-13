@@ -17,7 +17,7 @@ public:
 	    _beam_height = base::Angle::fromDeg(20.0);
 	};
 
-	base::samples::Sonar simulateMultibeamSonar(const std::vector<float>& data);
+	base::samples::Sonar simulateMultiBeam(const std::vector<float>& data);
 	std::vector<float> codeSonarData(const cv::Mat3f& cv_image);
 
 	unsigned int getNumberOfBeams() const {
