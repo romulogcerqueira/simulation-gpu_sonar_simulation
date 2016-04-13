@@ -18,7 +18,7 @@ public:
 	};
 
 	base::samples::Sonar simulateMultibeamSonar(const std::vector<float>& data);
-	std::vector<uint8_t> codeSonarData(const cv::Mat3f& cv_image);
+	std::vector<float> codeSonarData(const cv::Mat3f& cv_image);
 
 	unsigned int getNumberOfBeams() const {
 		return _number_of_beams;

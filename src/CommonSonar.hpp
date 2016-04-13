@@ -29,8 +29,7 @@ public:
 	    _beam_height = base::Angle::fromDeg(0.0);
 	};
 
-	std::vector<double> decodeShaderImage(const cv::Mat& raw_image);
-	std::vector<uint8_t> getPingData(std::vector<double>& raw_intensity);
+	std::vector<float> decodeShaderImage(const cv::Mat& raw_image);
 	double getSamplingInterval();
 
 	int getNumberOfBins() const {
@@ -83,7 +82,7 @@ public:
 
 private:
     float sigmoid(float value);
-    std::vector<double> rescaleIntensity(const std::vector<double>& bins_normal);
+    std::vector<float> rescaleIntensity(const std::vector<float>& bins_normal);
 
 protected:
 	int _number_of_bins;

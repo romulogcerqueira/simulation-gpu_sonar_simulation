@@ -28,13 +28,13 @@ base::samples::Sonar MultibeamSonar::simulateMultibeamSonar(const std::vector<fl
 // Split image in beam parts. The shader is not radially spaced equally
 // over the FOV-X degree sector, so it is necessary to identify which column
 // is contained on each beam.
-std::vector<uint8_t> MultibeamSonar::codeSonarData(const cv::Mat3f& cv_image) {
+std::vector<float> MultibeamSonar::codeSonarData(const cv::Mat3f& cv_image) {
 
 	std::vector<cv::Mat> shader;
 	cv::split(cv_image, shader);
 
 	// associates shader columns with their respective beam
-	std::vector<uint8_t> sonar_data(_number_of_beams * _number_of_bins, 0);
+	std::vector<float> sonar_data(_number_of_beams * _number_of_bins, 0);
 
 	int middle_img = shader[0].cols * 0.5;
 	double a = _number_of_beams * 1.0 / 2;
@@ -67,10 +67,9 @@ std::vector<uint8_t> MultibeamSonar::codeSonarData(const cv::Mat3f& cv_image) {
 			cv::Mat cv_roi = cv_image.colRange(col_start, col_end + 1);
 
 			// processes shader informations
-			std::vector<double> raw_intensity = decodeShaderImage(cv_roi);
-			std::vector<uint8_t> roi_data = getPingData(raw_intensity);
+			std::vector<float> raw_intensity = decodeShaderImage(cv_roi);
 			for (int i = 0; i < _number_of_bins; ++i)
-				sonar_data[_number_of_bins * id_beam + i] = roi_data[i];
+				sonar_data[_number_of_bins * id_beam + i] = raw_intensity[i];
 		}
 	}
 
