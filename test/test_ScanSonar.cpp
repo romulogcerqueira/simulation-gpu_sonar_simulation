@@ -47,7 +47,7 @@ cv::Mat createRandomImage(int rows, int cols) {
 void addOilRig(osg::ref_ptr<osg::Group> root){
 
 	std::string rock_path = getEnvVar("AUTOPROJ_CURRENT_ROOT");
-	osg::Node* oilring = osgDB::readNodeFile(rock_path + "/simulation/gpu_sonar_simulation/test_data/oil_rig_manifold/visual.dae");
+	osg::Node* oilring = osgDB::readNodeFile(rock_path + "/bundles/flat_fish/models/sdf/oil_rig_manifold/visual.dae");
 
 	osg::Matrix mtransf;
 	mtransf.preMult(osg::Matrix::translate(0, 13, 0));
@@ -68,9 +68,8 @@ BOOST_AUTO_TEST_CASE(first_test_case) {
 	cv::Mat raw_image = createRandomImage(4, 4);
 	vector<cv::Mat> channels(3);
 	split(raw_image, channels);
-	std::vector<double> raw_intensity = sonar.decodeShaderImage(raw_image);
-	std::vector<uint8_t> data = sonar.getPingData(raw_intensity);
-	base::samples::SonarBeam sonar_beam = sonar.simulateSonarBeam(data);
+	std::vector<float> raw_intensity = sonar.decodeShaderImage(raw_image);
+	base::samples::Sonar new_sonar = sonar.simulateSingleBeam(raw_intensity);
 }
 
 
