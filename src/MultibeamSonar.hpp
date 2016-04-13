@@ -11,11 +11,10 @@ public:
 	MultibeamSonar():
 		CommonSonar(),
 		_number_of_beams(256),
-		_pixels_per_beam(2),
-		_start_bearing(base::Angle::deg2Rad(-55.0))
+		_pixels_per_beam(2)
 	{
-		_beamwidth_horizontal = 110.0f;
-		_beamwidth_vertical = 20.0f;
+	    _beam_width = base::Angle::fromDeg(120.0);
+	    _beam_height = base::Angle::fromDeg(20.0);
 	};
 
 	base::samples::Sonar simulateMultibeamSonar(const std::vector<float>& data);
@@ -37,19 +36,9 @@ public:
 		_pixels_per_beam = pixelsPerBeam;
 	}
 
-	double getStartBearing() const {
-		return _start_bearing;
-	}
-
-	void setStartBearing(double startBearing) {
-		_start_bearing = startBearing;
-	}
-
 private:
 	unsigned int _number_of_beams;
 	unsigned int _pixels_per_beam;
-
-	double _start_bearing;
 };
 
 } // end namespace gpu_sonar_simulation

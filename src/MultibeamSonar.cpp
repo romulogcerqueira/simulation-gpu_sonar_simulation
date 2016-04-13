@@ -14,8 +14,8 @@ base::samples::Sonar MultibeamSonar::simulateMultibeamSonar(const std::vector<fl
     sonar.speed_of_sound = _speed_of_sound;
     sonar.bin_count = _number_of_bins;
     sonar.beam_count = _number_of_beams;
-    sonar.beam_width = base::Angle::fromDeg(_beamwidth_horizontal);
-    sonar.beam_height = base::Angle::fromDeg(_beamwidth_vertical);
+    sonar.beam_width = _beam_width;
+    sonar.beam_height = _beam_height;
     sonar.bins = data;
 
     base::Angle angular_resolution = base::Angle::fromRad(sonar.beam_width.rad / sonar.beam_count);

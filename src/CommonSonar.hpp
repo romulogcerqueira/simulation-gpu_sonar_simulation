@@ -23,10 +23,11 @@ public:
 		_number_of_bins(500),
 		_gain(0.5f),
 		_speed_of_sound(1500.0f),
-		_range(50.0f),
-		_beamwidth_horizontal(0.0f),
-		_beamwidth_vertical(0.0f)
-	{};
+		_range(50.0f)
+	{
+	    _beam_width = base::Angle::fromDeg(0.0);
+	    _beam_height = base::Angle::fromDeg(0.0);
+	};
 
 	std::vector<double> decodeShaderImage(const cv::Mat& raw_image);
 	std::vector<uint8_t> getPingData(std::vector<double>& raw_intensity);
@@ -48,22 +49,6 @@ public:
 		_range = range;
 	}
 
-	float getBeamwidthHorizontal() const {
-		return _beamwidth_horizontal;
-	}
-
-	void setBeamwidthHorizontal(float beamwidthHorizontal) {
-		_beamwidth_horizontal = beamwidthHorizontal;
-	}
-
-	float getBeamwidthVertical() const {
-		return _beamwidth_vertical;
-	}
-
-	void setBeamwidthVertical(float beamwidthVertical) {
-		_beamwidth_vertical = beamwidthVertical;
-	}
-
 	float getSpeedOfSound() const {
 		return _speed_of_sound;
 	}
@@ -80,6 +65,22 @@ public:
         _gain = gain;
     }
 
+    const base::Angle& getBeamHeight() const {
+        return _beam_height;
+    }
+
+    void setBeamHeight(const base::Angle& beamHeight) {
+        _beam_height = beamHeight;
+    }
+
+    const base::Angle& getBeamWidth() const {
+        return _beam_width;
+    }
+
+    void setBeamWidth(const base::Angle& beamWidth) {
+        _beam_width = beamWidth;
+    }
+
 private:
     float sigmoid(float value);
     std::vector<double> rescaleIntensity(const std::vector<double>& bins_normal);
@@ -87,11 +88,10 @@ private:
 protected:
 	int _number_of_bins;
 	float _gain;
-
 	float _speed_of_sound;
 	float _range;
-	float _beamwidth_horizontal;
-	float _beamwidth_vertical;
+	base::Angle _beam_width;
+	base::Angle _beam_height;
 };
 
 } // end namespace gpu_sonar_simulation

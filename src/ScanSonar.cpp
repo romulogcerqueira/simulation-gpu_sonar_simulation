@@ -11,11 +11,11 @@ base::samples::Sonar ScanSonar::simulateSingleBeam (const std::vector<float>& da
     base::samples::Sonar sonar;
     sonar.time = base::Time::now();
     sonar.bin_duration = base::Time::fromSeconds(getSamplingInterval() / 2.0);
-    sonar.beam_width = base::Angle::fromRad(_beamwidth_horizontal);
-    sonar.beam_height = base::Angle::fromRad(_beamwidth_vertical);
+    sonar.beam_width = _beam_width;
+    sonar.beam_height = _beam_height;
     sonar.speed_of_sound = _speed_of_sound;
     sonar.bin_count = data.size();
-    sonar.pushBeam(data, base::Angle::fromRad(_bearing));
+    sonar.pushBeam(data, _bearing);
 
     return sonar;
 }
