@@ -1,12 +1,5 @@
-/*
- * MultibeamSonar.hpp
- *
- *  Created on: Jul 29, 2015
- *      Author: romulogcerqueira
- */
-
-#ifndef _MULTIBEAMSONAR_HPP_
-#define _MULTIBEAMSONAR_HPP_
+#ifndef GPU_SONAR_SIMULATION_MULTIBEAM_SONAR_HPP
+#define GPU_SONAR_SIMULATION_MULTIBEAM_SONAR_HPP
 
 #include "CommonSonar.hpp"
 

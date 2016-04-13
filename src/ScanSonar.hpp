@@ -1,12 +1,5 @@
-/*
- * SonarScan.hpp
- *
- *  Created on: Apr 29, 2015
- *      Author: romulogcerqueira
- */
-
-#ifndef _SCANSONAR_HPP_
-#define _SCANSONAR_HPP_
+#ifndef GPU_SONAR_SIMULATION_SCAN_SONAR_HPP
+#define GPU_SONAR_SIMULATION_SCAN_SONAR_HPP
 
 #include "CommonSonar.hpp"
 
