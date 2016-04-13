@@ -21,7 +21,8 @@ public:
 		_beamwidth_vertical = 35.0f;
 	};
 
-	base::samples::SonarBeam simulateSonarBeam (const std::vector<uint8_t>& data);
+	base::samples::Sonar simulateSingleBeam(const std::vector<float>& data);
+	void moveHeadPosition();
 
 	bool isReverseScan() const {
 		return _reverse_scan;

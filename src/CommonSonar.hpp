@@ -6,8 +6,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/contrib/contrib.hpp>
 
-#include <base/samples/SonarBeam.hpp>
-#include <base/samples/SonarScan.hpp>
+#include <base/samples/Sonar.hpp>
 #include <base/Angle.hpp>
 
 #include <vector>
