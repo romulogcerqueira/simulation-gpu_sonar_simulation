@@ -47,7 +47,7 @@ cv::Mat createRandomImage(int rows, int cols) {
 void addOilRig(osg::ref_ptr<osg::Group> root){
 
 	std::string rock_path = getEnvVar("AUTOPROJ_CURRENT_ROOT");
-	osg::Node* oilring = osgDB::readNodeFile(rock_path + "/bundles/flat_fish/models/sdf/oil_rig_manifold/visual.dae");
+	osg::Node* oilring = osgDB::readNodeFile(rock_path + "/simulation/gpu_sonar_simulation/test/oil_rig_manifold/visual.dae.osgb");
 
 	osg::Matrix mtransf;
 	mtransf.preMult(osg::Matrix::translate(0, 13, 0));
