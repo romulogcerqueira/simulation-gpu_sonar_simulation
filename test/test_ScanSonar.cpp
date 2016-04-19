@@ -24,13 +24,6 @@ BOOST_AUTO_TEST_SUITE(gpu_sonar_simulation_MicronSim)
 
 #define myrand ((float)(random())/(float)(RAND_MAX) )
 
-// get the value of an environment variable
-std::string getEnvVar(std::string env_name) {
-	const char* env_p = std::getenv(env_name.c_str());
-	std::string result(env_p);
-	return result;
-}
-
 // create a depth and normal matrixes to test
 cv::Mat createRandomImage(int rows, int cols) {
 	cv::Mat raw_image = cv::Mat::zeros(rows, cols, CV_32FC3);
@@ -46,8 +39,9 @@ cv::Mat createRandomImage(int rows, int cols) {
 // add an oil rig manifold to the scene
 void addOilRig(osg::ref_ptr<osg::Group> root){
 
-	std::string rock_path = getEnvVar("AUTOPROJ_CURRENT_ROOT");
-	osg::Node* oilring = osgDB::readNodeFile(rock_path + "/simulation/gpu_sonar_simulation/test/oil_rig_manifold/visual.dae.osgb");
+    std::string current_path(__FILE__);
+    current_path = current_path.substr(0, current_path.find_last_of("/"));
+    osg::Node* oilring = osgDB::readNodeFile(current_path + "/oil_rig_manifold/visual.dae.osgb");
 
 	osg::Matrix mtransf;
 	mtransf.preMult(osg::Matrix::translate(0, 13, 0));
@@ -78,7 +72,6 @@ BOOST_AUTO_TEST_CASE(complete_rotate_image) {
 	osg::ref_ptr<osg::Image> osg_image;
 
 	// init scene
-	uint resolution = 600;
 	float viewX = 3.0, viewY = 35.0;
 	double range = 60.0;
 
@@ -163,10 +156,10 @@ BOOST_AUTO_TEST_CASE(complete_rotate_image) {
 		std::cout << "up     : " << up.x() << "," << up.y() << "," << up.z() << std::endl;
 	}
 
-//	osgViewer::Viewer viewer;
-//	viewer.setUpViewInWindow(0,0,600,600);
-//	viewer.setSceneData(normal_depth_map.getNormalDepthMapNode());
-//	viewer.run();
+	osgViewer::Viewer viewer;
+	viewer.setUpViewInWindow(0,0,600,600);
+	viewer.setSceneData(normal_depth_map.getNormalDepthMapNode());
+	viewer.run();
 }
 
 BOOST_AUTO_TEST_SUITE_END();
