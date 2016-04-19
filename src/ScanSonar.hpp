@@ -1,12 +1,5 @@
-/*
- * SonarScan.hpp
- *
- *  Created on: Apr 29, 2015
- *      Author: romulogcerqueira
- */
-
-#ifndef _SCANSONAR_HPP_
-#define _SCANSONAR_HPP_
+#ifndef GPU_SONAR_SIMULATION_SCAN_SONAR_HPP
+#define GPU_SONAR_SIMULATION_SCAN_SONAR_HPP
 
 #include "CommonSonar.hpp"
 
@@ -17,18 +10,19 @@ public:
 
 	ScanSonar():
 		CommonSonar(),
-		_bearing(0),
-		_start_angle(0),
-		_end_angle(M_PI*2),
-		_step_angle(base::Angle::deg2Rad(1.8)),
 		_ping_pong_mode(false),
 		_reverse_scan(false)
 	{
-		_beamwidth_horizontal = 3.0f;
-		_beamwidth_vertical = 35.0f;
+	    _beam_width = base::Angle::fromDeg(3.0);
+	    _beam_height = base::Angle::fromDeg(35.0);
+	    _bearing = base::Angle::fromRad(0.0);
+	    _start_angle = base::Angle::fromRad(-M_PI);
+	    _end_angle = base::Angle::fromRad(M_PI);
+	    _step_angle = base::Angle::fromDeg(0.9);
 	};
 
-	base::samples::SonarBeam simulateSonarBeam (const std::vector<uint8_t>& data);
+	base::samples::Sonar simulateSingleBeam(const std::vector<float>& data);
+	void moveHeadPosition();
 
 	bool isReverseScan() const {
 		return _reverse_scan;
@@ -46,43 +40,43 @@ public:
 		_ping_pong_mode = pingPongMode;
 	}
 
-	double getBearing() const {
-		return _bearing;
-	}
+    const base::Angle& getBearing() const {
+        return _bearing;
+    }
 
-	void setBearing(double bearing) {
-		_bearing = bearing;
-	}
+    void setBearing(const base::Angle& bearing) {
+        _bearing = bearing;
+    }
 
-	double getEndAngle() const {
-		return _end_angle;
-	}
+    const base::Angle& getEndAngle() const {
+        return _end_angle;
+    }
 
-	void setEndAngle(double endAngle) {
-		_end_angle = endAngle;
-	}
+    void setEndAngle(const base::Angle& endAngle) {
+        _end_angle = endAngle;
+    }
 
-	double getStartAngle() const {
-		return _start_angle;
-	}
+    const base::Angle& getStartAngle() const {
+        return _start_angle;
+    }
 
-	void setStartAngle(double startAngle) {
-		_start_angle = startAngle;
-	}
+    void setStartAngle(const base::Angle& startAngle) {
+        _start_angle = startAngle;
+    }
 
-	double getStepAngle() const {
-		return _step_angle;
-	}
+    const base::Angle& getStepAngle() const {
+        return _step_angle;
+    }
 
-	void setStepAngle(double stepAngle) {
-		_step_angle = stepAngle;
-	}
+    void setStepAngle(const base::Angle& stepAngle) {
+        _step_angle = stepAngle;
+    }
 
 private:
-	double _bearing;
-	double _start_angle;
-	double _end_angle;
-	double _step_angle;
+	base::Angle _bearing;
+	base::Angle _start_angle;
+	base::Angle _end_angle;
+	base::Angle _step_angle;
 
 	bool _ping_pong_mode;
 	bool _reverse_scan;

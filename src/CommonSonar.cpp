@@ -20,7 +20,7 @@ float CommonSonar::sigmoid(float x) {
 
 // Receive shader image (normal and depth matrixes) and convert to get
 // the bins intensities
-std::vector<double> CommonSonar::decodeShaderImage(const cv::Mat& raw_image) {
+std::vector<float> CommonSonar::decodeShaderImage(const cv::Mat& raw_image) {
 
     if (raw_image.type() != CV_32FC3)
         std::invalid_argument("Invalid shader image format!");
@@ -31,7 +31,7 @@ std::vector<double> CommonSonar::decodeShaderImage(const cv::Mat& raw_image) {
     // we need to rescale the sonar intensity data applying a linear transformation.
     int default_bins = 256;
     std::vector<int> bins_depth(default_bins, 0);
-    std::vector<double> bins_normal(default_bins, 0);
+    std::vector<float> bins_normal(default_bins, 0);
 
     // calculate depth histogram
     for (cv::MatConstIterator_<Vec3f> it = raw_image.begin<Vec3f>(); it != raw_image.end<Vec3f>(); ++it)
@@ -47,10 +47,10 @@ std::vector<double> CommonSonar::decodeShaderImage(const cv::Mat& raw_image) {
 }
 
 // Rescale the accumulated normal vector to the number of bins desired
-std::vector<double> CommonSonar::rescaleIntensity(const std::vector<double>& bins_normal) {
+std::vector<float> CommonSonar::rescaleIntensity(const std::vector<float>& bins_normal) {
 
     double rate = _number_of_bins * 1.0 / bins_normal.size();
-    std::vector<double> new_hist(_number_of_bins, 0);
+    std::vector<float> new_hist(_number_of_bins, 0);
 
     for (unsigned int i = 0; i < bins_normal.size() - 1; ++i) {
         double iNew = i * rate;
@@ -66,15 +66,6 @@ std::vector<double> CommonSonar::rescaleIntensity(const std::vector<double>& bin
     }
 
     return new_hist;
-}
-
-// Calculate ping intensity in 8-bit format data
-std::vector<uint8_t> CommonSonar::getPingData(std::vector<double>& raw_intensity) {
-
-    std::transform(raw_intensity.begin(), raw_intensity.end(), raw_intensity.begin(), std::bind1st(std::multiplies<double>(), 255));
-    std::vector<uint8_t> ping_intensity(raw_intensity.begin(), raw_intensity.end());
-
-    return ping_intensity;
 }
 
 // Calculate the sample time period that is applied to the received Sonar echo signal
