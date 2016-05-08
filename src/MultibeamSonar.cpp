@@ -34,37 +34,33 @@ std::vector<float> MultibeamSonar::codeSonarData(const cv::Mat3f& cv_image) {
 	cv::split(cv_image, shader);
 
 	// associates shader columns with their respective beam
-	std::vector<float> sonar_data(_number_of_beams * _number_of_bins, 0);
+	std::vector<float> sonar_data(_number_of_beams * _number_of_bins, 0.0);
 
 	int middle_img = shader[0].cols * 0.5;
-	double a = _number_of_beams * 1.0 / 2;
 
 	for (int i = 0; i < shader[0].cols; i++) {
 
 		// Checks normal values in each column
 		if (cv::countNonZero(shader[0].col(i))) {
-
 			int col_start = i;
-			int col_end = -1;
-			int id_beam;
 
 			// gets the maximum angle in that column
-			double max, max2;
-			cv::minMaxIdx(shader[2].col(i), NULL, &max);
+			double max_angle;
+			cv::minMaxIdx(shader[2].col(i), NULL, &max_angle);
+			i < middle_img ? max_angle = (1 - max_angle) * 0.5 : max_angle = (1 + max_angle) * 0.5;
 
-			i < middle_img ? max = -max : max += 0;
-			id_beam = a * (max + 1);
+			int id_beam = (_number_of_beams - 1) * max_angle;
+			int id_curr = id_beam;
 
-			while (col_end == -1) {
-				cv::minMaxIdx(shader[2].col(++i), NULL, &max2);
-				i < middle_img ? max2 = -max2 : max2 += 0;
-				int id_curr = a * (max2 + 1);
-				if (id_curr != id_beam)
-					col_end = --i;
+			// checks which columns belongs to same beam
+			while ((id_curr == id_beam) && (i < (shader[2].cols - 1))) {
+				cv::minMaxIdx(shader[2].col(++i), NULL, &max_angle);
+				i < middle_img ? max_angle = (1 - max_angle) * 0.5 : max_angle = (1 + max_angle) * 0.5;
+				id_curr = (_number_of_beams - 1) * max_angle;
 			}
 
 			// gets the ROI (beam) of shader image
-			cv::Mat cv_roi = cv_image.colRange(col_start, col_end + 1);
+			cv::Mat cv_roi = cv_image.colRange(col_start, i);
 
 			// processes shader informations
 			std::vector<float> raw_intensity = decodeShaderImage(cv_roi);
