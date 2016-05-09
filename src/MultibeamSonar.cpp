@@ -47,7 +47,10 @@ std::vector<float> MultibeamSonar::codeSonarData(const cv::Mat3f& cv_image) {
 			// gets the maximum angle in that column
 			double max_angle;
 			cv::minMaxIdx(shader[2].col(i), NULL, &max_angle);
-			i < middle_img ? max_angle = (1 - max_angle) * 0.5 : max_angle = (1 + max_angle) * 0.5;
+			if (i < middle_img)
+			    max_angle = (1 - max_angle) * 0.5;
+			else
+			    max_angle = (1 + max_angle) * 0.5;
 
 			int id_beam = (_number_of_beams - 1) * max_angle;
 			int id_curr = id_beam;
@@ -55,7 +58,10 @@ std::vector<float> MultibeamSonar::codeSonarData(const cv::Mat3f& cv_image) {
 			// checks which columns belongs to same beam
 			while ((id_curr == id_beam) && (i < (shader[2].cols - 1))) {
 				cv::minMaxIdx(shader[2].col(++i), NULL, &max_angle);
-				i < middle_img ? max_angle = (1 - max_angle) * 0.5 : max_angle = (1 + max_angle) * 0.5;
+				if (i < middle_img)
+				    max_angle = (1 - max_angle) * 0.5;
+				else
+				    max_angle = (1 + max_angle) * 0.5;
 				id_curr = (_number_of_beams - 1) * max_angle;
 			}
 
