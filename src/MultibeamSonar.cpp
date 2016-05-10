@@ -66,12 +66,16 @@ std::vector<float> MultibeamSonar::codeSonarData(const cv::Mat3f& cv_image) {
 			}
 
 			// gets the ROI (beam) of shader image
-			cv::Mat cv_roi = cv_image.colRange(col_start, i);
+			cv::Mat cv_roi;
+			if (col_start == i)
+			    cv_roi = cv_image.col(i);
+			else
+			    cv_roi = cv_image.colRange(col_start, i);
 
 			// processes shader informations
 			std::vector<float> raw_intensity = decodeShaderImage(cv_roi);
-			for (int i = 0; i < _number_of_bins; ++i)
-				sonar_data[_number_of_bins * id_beam + i] = raw_intensity[i];
+			for (int j = 0; j < _number_of_bins; ++j)
+				sonar_data[_number_of_bins * id_beam + j] = raw_intensity[j];
 		}
 	}
 
