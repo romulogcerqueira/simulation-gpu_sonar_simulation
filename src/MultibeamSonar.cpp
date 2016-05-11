@@ -30,19 +30,17 @@ base::samples::Sonar MultibeamSonar::simulateMultiBeam(const std::vector<float>&
 // is contained on each beam.
 std::vector<float> MultibeamSonar::codeSonarData(const cv::Mat3f& cv_image)
 {
-    std::vector<cv::Mat> shader;
-    cv::split(cv_image, shader);
-
     // associates shader columns with their respective beam
     std::vector<float> sonar_data(_beam_count * _bin_count, 0.0);
 
-    double const half_fovx = _beam_count * _beam_width.getRad() / 2;
-    double const half_width = static_cast<double>(shader[0].cols) / 2;
-    double const angle2x = half_width * tan(half_fovx);
+    double const beam_size = _beam_width.rad / _beam_count;
+    double const half_fovx = beam_size * _beam_count / 2;
+    double const half_width = static_cast<double>(cv_image.cols) / 2;
+    double const angle2x = half_width / tan(half_fovx);
     for (unsigned int beam_idx = 0; beam_idx < _beam_count; ++beam_idx)
     {
-        int min_col = round(half_width + tan(- half_fovx + beam_idx * _beam_width.getRad()) * angle2x);
-        int max_col = round(half_width + tan(- half_fovx + (beam_idx + 1) * _beam_width.getRad()) * angle2x);
+        int min_col = round(half_width + tan(- half_fovx + beam_idx * beam_size) * angle2x);
+        int max_col = round(half_width + tan(- half_fovx + (beam_idx + 1) * beam_size) * angle2x);
         cv::Mat cv_roi = cv_image.colRange(min_col, max_col);
 
         std::vector<float> raw_intensity = decodeShaderImage(cv_roi);
