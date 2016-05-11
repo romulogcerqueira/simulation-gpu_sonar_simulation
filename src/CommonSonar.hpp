@@ -20,7 +20,7 @@ class CommonSonar {
 public:
 
 	CommonSonar():
-		_number_of_bins(500),
+		_bin_count(500),
 		_gain(0.5f),
 		_speed_of_sound(1500.0f),
 		_range(50.0f)
@@ -32,12 +32,12 @@ public:
 	std::vector<float> decodeShaderImage(const cv::Mat& raw_image);
 	double getSamplingInterval();
 
-	int getNumberOfBins() const {
-		return _number_of_bins;
+	uint32_t getBinCount() const {
+	    return _bin_count;
 	}
 
-	void setNumberOfBins(int numberOfBins) {
-		_number_of_bins = numberOfBins;
+	void setBinCount(uint32_t binCount) {
+	    _bin_count = binCount;
 	}
 
 	float getRange() const {
@@ -85,7 +85,7 @@ private:
     std::vector<float> rescaleIntensity(const std::vector<float>& bins_normal);
 
 protected:
-	int _number_of_bins;
+	uint32_t _bin_count;
 	float _gain;
 	float _speed_of_sound;
 	float _range;
