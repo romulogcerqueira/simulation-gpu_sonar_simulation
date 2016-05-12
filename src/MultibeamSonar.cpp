@@ -33,8 +33,8 @@ std::vector<float> MultibeamSonar::codeSonarData(const cv::Mat3f& cv_image)
     // associates shader columns with their respective beam
     std::vector<float> sonar_data(_beam_count * _bin_count, 0.0);
 
-    double const beam_size = _beam_width.rad / _beam_count;
-    double const half_fovx = beam_size * _beam_count / 2;
+    double const beam_size = _beam_width.getRad() / _beam_count;
+    double const half_fovx = _beam_width.getRad() / 2;
     double const half_width = static_cast<double>(cv_image.cols) / 2;
     double const angle2x = half_width / tan(half_fovx);
     for (unsigned int beam_idx = 0; beam_idx < _beam_count; ++beam_idx)
