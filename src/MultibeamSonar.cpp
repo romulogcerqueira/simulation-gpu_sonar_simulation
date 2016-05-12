@@ -12,8 +12,8 @@ base::samples::Sonar MultibeamSonar::simulateMultiBeam(const std::vector<float>&
 
     sonar.time = base::Time::now();
     sonar.speed_of_sound = _speed_of_sound;
-    sonar.bin_count = _number_of_bins;
-    sonar.beam_count = _number_of_beams;
+    sonar.bin_count = _bin_count;
+    sonar.beam_count = _beam_count;
     sonar.beam_width = _beam_width;
     sonar.beam_height = _beam_height;
     sonar.bins = data;
@@ -28,52 +28,26 @@ base::samples::Sonar MultibeamSonar::simulateMultiBeam(const std::vector<float>&
 // Split image in beam parts. The shader is not radially spaced equally
 // over the FOV-X degree sector, so it is necessary to identify which column
 // is contained on each beam.
-std::vector<float> MultibeamSonar::codeSonarData(const cv::Mat3f& cv_image) {
+std::vector<float> MultibeamSonar::codeSonarData(const cv::Mat3f& cv_image)
+{
+    // associates shader columns with their respective beam
+    std::vector<float> sonar_data(_beam_count * _bin_count, 0.0);
 
-	std::vector<cv::Mat> shader;
-	cv::split(cv_image, shader);
+    double const beam_size = _beam_width.getRad() / _beam_count;
+    double const half_fovx = _beam_width.getRad() / 2;
+    double const half_width = static_cast<double>(cv_image.cols) / 2;
+    double const angle2x = half_width / tan(half_fovx);
+    for (unsigned int beam_idx = 0; beam_idx < _beam_count; ++beam_idx)
+    {
+        int min_col = round(half_width + tan(- half_fovx + beam_idx * beam_size) * angle2x);
+        int max_col = round(half_width + tan(- half_fovx + (beam_idx + 1) * beam_size) * angle2x);
+        cv::Mat cv_roi = cv_image.colRange(min_col, max_col);
 
-	// associates shader columns with their respective beam
-	std::vector<float> sonar_data(_number_of_beams * _number_of_bins, 0);
-
-	int middle_img = shader[0].cols * 0.5;
-	double a = _number_of_beams * 1.0 / 2;
-
-	for (int i = 0; i < shader[0].cols; i++) {
-
-		// Checks normal values in each column
-		if (cv::countNonZero(shader[0].col(i))) {
-
-			int col_start = i;
-			int col_end = -1;
-			int id_beam;
-
-			// gets the maximum angle in that column
-			double max, max2;
-			cv::minMaxIdx(shader[2].col(i), NULL, &max);
-
-			i < middle_img ? max = -max : max += 0;
-			id_beam = a * (max + 1);
-
-			while (col_end == -1) {
-				cv::minMaxIdx(shader[2].col(++i), NULL, &max2);
-				i < middle_img ? max2 = -max2 : max2 += 0;
-				int id_curr = a * (max2 + 1);
-				if (id_curr != id_beam)
-					col_end = --i;
-			}
-
-			// gets the ROI (beam) of shader image
-			cv::Mat cv_roi = cv_image.colRange(col_start, col_end + 1);
-
-			// processes shader informations
-			std::vector<float> raw_intensity = decodeShaderImage(cv_roi);
-			for (int i = 0; i < _number_of_bins; ++i)
-				sonar_data[_number_of_bins * id_beam + i] = raw_intensity[i];
-		}
-	}
-
-	return sonar_data;
+        std::vector<float> raw_intensity = decodeShaderImage(cv_roi);
+        for (int j = 0; j < _bin_count; j++)
+            sonar_data[_bin_count * beam_idx + j] = raw_intensity[j];
+    }
+    return sonar_data;
 }
 
 

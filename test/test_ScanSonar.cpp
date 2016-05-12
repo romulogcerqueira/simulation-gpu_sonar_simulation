@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(first_test_case) {
 	using namespace gpu_sonar_simulation_MicronSim;
 
 	ScanSonar sonar;
-	sonar.setNumberOfBins(5);
+	sonar.setBinCount(5);
 	cv::Mat raw_image = createRandomImage(4, 4);
 	vector<cv::Mat> channels(3);
 	split(raw_image, channels);
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(complete_rotate_image) {
 	double range = 60.0;
 
 	ScanSonar sonar;
-	sonar.setNumberOfBins(500);
+	sonar.setBinCount(500);
 	NormalDepthMap normal_depth_map(range, viewX, viewY);
 	ImageViewerCaptureTool capture(640,480);
 	capture.setBackgroundColor(osg::Vec4d(0, 0, 0, 0));

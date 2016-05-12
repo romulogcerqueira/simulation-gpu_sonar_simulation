@@ -49,8 +49,8 @@ std::vector<float> CommonSonar::decodeShaderImage(const cv::Mat& raw_image) {
 // Rescale the accumulated normal vector to the number of bins desired
 std::vector<float> CommonSonar::rescaleIntensity(const std::vector<float>& bins_normal) {
 
-    double rate = _number_of_bins * 1.0 / bins_normal.size();
-    std::vector<float> new_hist(_number_of_bins, 0);
+    double rate = _bin_count * 1.0 / bins_normal.size();
+    std::vector<float> new_hist(_bin_count, 0);
 
     for (unsigned int i = 0; i < bins_normal.size() - 1; ++i) {
         double iNew = i * rate;
@@ -73,6 +73,6 @@ double CommonSonar::getSamplingInterval() {
 
 	double travel_time = _range * 2.0 / _speed_of_sound;
 
-	return travel_time / _number_of_bins;
+	return travel_time / _bin_count;
 }
 }

@@ -10,8 +10,7 @@ public:
 
 	MultibeamSonar():
 		CommonSonar(),
-		_number_of_beams(256),
-		_pixels_per_beam(2)
+		_beam_count(256)
 	{
 	    _beam_width = base::Angle::fromDeg(120.0);
 	    _beam_height = base::Angle::fromDeg(20.0);
@@ -20,25 +19,16 @@ public:
 	base::samples::Sonar simulateMultiBeam(const std::vector<float>& data);
 	std::vector<float> codeSonarData(const cv::Mat3f& cv_image);
 
-	unsigned int getNumberOfBeams() const {
-		return _number_of_beams;
+	uint32_t getBeamCount() const {
+	    return _beam_count;
 	}
 
-	void setNumberOfBeams(unsigned int numberOfBeams) {
-		_number_of_beams = numberOfBeams;
-	}
-
-	unsigned int getPixelsPerBeam() const {
-		return _pixels_per_beam;
-	}
-
-	void setPixelsPerBeam(unsigned int pixelsPerBeam) {
-		_pixels_per_beam = pixelsPerBeam;
+	void setBeamCount(uint32_t beamCount) {
+	    _beam_count = beamCount;
 	}
 
 private:
-	unsigned int _number_of_beams;
-	unsigned int _pixels_per_beam;
+	uint32_t _beam_count;
 };
 
 } // end namespace gpu_sonar_simulation
