@@ -1,24 +1,24 @@
-#include <gpu_sonar_simulation/ScanSonar.hpp>
+#define BOOST_TEST_MODULE "Sonar_test"
+#include <boost/test/unit_test.hpp>
+
+// Rock includes
+#include <gpu_sonar_simulation/Sonar.hpp>
 #include <gpu_sonar_simulation/Utils.hpp>
 #include <vizkit3d_normal_depth_map/NormalDepthMap.hpp>
 #include <vizkit3d_normal_depth_map/ImageViewerCaptureTool.hpp>
+#include <base/Angle.hpp>
 
-#include <iostream>
-#include <stdio.h>
-#include <cstdlib>
-
-#include <osg/Geode>
+// Openscenegraph includes
 #include <osg/Group>
-#include <osg/ShapeDrawable>
-#include <osg/Transform>
 #include <osg/MatrixTransform>
 #include <osgDB/ReadFile>
 
-#define BOOST_TEST_MODULE "ScanSonar_test"
-#include <boost/test/unit_test.hpp>
+// Opencv includes
+#include <opencv2/highgui/highgui.hpp>
 
 using namespace gpu_sonar_simulation;
 using namespace vizkit3d_normal_depth_map;
+using namespace cv;
 
 BOOST_AUTO_TEST_SUITE(gpu_sonar_simulation_MicronSim)
 
@@ -53,61 +53,69 @@ void addOilRig(osg::ref_ptr<osg::Group> root){
 	root->addChild(ptransform);
 }
 
-BOOST_AUTO_TEST_CASE(first_test_case) {
+// plot the accumulated bins intensity as an histogram
+cv::Mat plotHistogram(const cv::Mat& raw_intensity, int bins) {
 
-	using namespace gpu_sonar_simulation_MicronSim;
+	double max;
+	cv::minMaxIdx(raw_intensity, NULL, &max);
 
-	ScanSonar sonar;
-	sonar.setBinCount(5);
-	cv::Mat raw_image = createRandomImage(4, 4);
-	vector<cv::Mat> channels(3);
-	split(raw_image, channels);
-	std::vector<float> raw_intensity = sonar.decodeShaderImage(raw_image);
-	base::samples::Sonar new_sonar = sonar.simulateSingleBeam(raw_intensity);
+	cv::Mat1f new_bin = raw_intensity / max;
+	cv::Mat cv_hist = cv::Mat3b::zeros(bins, bins);
+
+	for (int i = 0; i < bins; i++) {
+		cv::Scalar color;
+		(i % 2) == 0 ? color = cv::Scalar(255, 255, 0) : color = cv::Scalar(0, 0, 255);
+		cv::line(cv_hist, cv::Point(i, bins), cv::Point(i, bins * (1 - new_bin.at<float>(i))), color, 1);
+	}
+
+	return cv_hist;
 }
 
+BOOST_AUTO_TEST_CASE(histogram) {
+    cv::Mat cv_image = createRandomImage(100, 100);
+    cv_image = plotHistogram(cv_image, 256);
+    cv::imshow("Normal histogram", cv_image);
+    cv::waitKey(0);
+}
 
 BOOST_AUTO_TEST_CASE(complete_rotate_image) {
 
 	osg::ref_ptr<osg::Image> osg_image;
 
 	// init scene
-	float viewX = 3.0, viewY = 35.0;
+    base::Angle beam_width = base::Angle::fromDeg(3.0);
+    base::Angle beam_height = base::Angle::fromDeg(35.0);
 	double range = 60.0;
-
-	ScanSonar sonar;
-	sonar.setBinCount(500);
-	NormalDepthMap normal_depth_map(range, viewX, viewY);
+	NormalDepthMap normal_depth_map(range, beam_width.getDeg(), beam_height.getDeg());
 	ImageViewerCaptureTool capture(640,480);
 	capture.setBackgroundColor(osg::Vec4d(0, 0, 0, 0));
 
+    // add oilrig
 	osg::ref_ptr<osg::Group> root = new osg::Group();
 	addOilRig(root);
 	normal_depth_map.addNodeChild(root);
 
-	double rot = 0.0;
-	double transX = 0.0;
-	double transY = 0.0;
-	double transZ = 0.0;
+    base::Angle rot = base::Angle::fromDeg(0.0);
+    base::Angle transX = base::Angle::fromDeg(0.0);
+    base::Angle transY = base::Angle::fromDeg(0.0);
+    base::Angle transZ = base::Angle::fromDeg(0.0);
 
 	while(true)
 	{
 		// transformation matrixes
 		osg::Matrixd matrix;
-		matrix.setTrans(osg::Vec3(transX, transY, transZ));
-		matrix.setRotate(osg::Quat(rot, osg::Vec3(0, 0, 1)));
+		matrix.setTrans(osg::Vec3(transX.getDeg(), transY.getDeg(), transZ.getDeg()));
+		matrix.setRotate(osg::Quat(rot.getRad(), osg::Vec3(0, 0, 1)));
 		matrix.invert(matrix);
 
 		osg::Matrixd rock_coordinate_system =
 				osg::Matrixd::rotate(-M_PI_2, osg::Vec3(0, 0, -1)) *
 				osg::Matrixd::rotate(-M_PI_2, osg::Vec3(1, 0, 0));
 
-
 		osg::Matrixd m = matrix * rock_coordinate_system;
 		osg::Vec3 eye, center, up;
 		m.getLookAt(eye, center, up);
 		capture.setCameraPosition(eye, center, up);
-
 
 		// grab capture
 		osg::ref_ptr<osg::Image> osgImage = capture.grabImage(normal_depth_map.getNormalDepthMapNode());
@@ -117,41 +125,38 @@ BOOST_AUTO_TEST_CASE(complete_rotate_image) {
 		cv::imshow("Normal Depth Map", cvImage);
 		char k = cv::waitKey(0);
 
-		switch(k)
-		{
-
+		switch(k) {
 			case 27:		//	ESC
 				exit(0);
 				break;
 			case 85:		// UP
-				transZ += 2.0f;
+				transZ += base::Angle::fromDeg(2.0);
 				break;
 			case 86:		// DOWN
-				transZ -= 2.0f;
+				transZ -= base::Angle::fromDeg(2.0);
 				break;
 			case 81:		// LEFT
-				transY += 2.0f;
+				transY += base::Angle::fromDeg(2.0);
 				break;
 			case 83:		// RIGHT
-				transY -= 2.0f;
+				transY -= base::Angle::fromDeg(2.0);
 				break;
 			case 82:		// PAGE UP
-				transX += 2.0f;
+				transX += base::Angle::fromDeg(2.0);
 				break;
 			case 84:		// PAGE DOWN
-				transX -= 2.0f;
+				transX -= base::Angle::fromDeg(2.0);
 				break;
 			case 122:		// Z
-				rot += osg::DegreesToRadians(5.0);
+				rot += base::Angle::fromDeg(5.0);
 				break;
 			case 120:		// X
-				rot -= osg::DegreesToRadians(5.0);
+				rot -= rot += base::Angle::fromDeg(5.0);
 				break;
-
 		}
 
 		std::cout << "--- camera params ---" << std::endl;
-		std::cout << "trans  : " << transX << "," << transY << "," << transZ << std::endl;
+		std::cout << "trans  : " << transX.getDeg() << "," << transY.getDeg() << "," << transZ.getDeg() << std::endl;
 		std::cout << "eye    : " << eye.x() << "," << eye.y() << "," << eye.z() << std::endl;
 		std::cout << "center : " << center.x() << "," << center.y() << "," << center.z() << std::endl;
 		std::cout << "up     : " << up.x() << "," << up.y() << "," << up.z() << std::endl;
@@ -162,5 +167,4 @@ BOOST_AUTO_TEST_CASE(complete_rotate_image) {
 	viewer.setSceneData(normal_depth_map.getNormalDepthMapNode());
 	viewer.run();
 }
-
 BOOST_AUTO_TEST_SUITE_END();
