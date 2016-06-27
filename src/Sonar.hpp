@@ -59,11 +59,10 @@ public:
 	/**
 	 *  Encapsulate the simulated sonar data in the Rock's sonar datatype.
 	 *  @param bins: the simulated sonar data in float
-	 *  @param sonar: the simulated sonar in the Rock's structure
-	 *  @param bearings: the set of bearings
 	 *  @param range: the maximum coveraged area in meters
+	 *  @return the simulated sonar in the Rock's structure
 	 */
-	void simulateSonar(const std::vector<float>& bins, base::samples::Sonar& sonar, const std::vector<base::Angle>& bearings, float range);
+	base::samples::Sonar simulateSonar(const std::vector<float>& bins, float range);
 
 	/**
 	 *  Apply an additional gain in the simulated sonar data.

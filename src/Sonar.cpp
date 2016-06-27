@@ -25,7 +25,8 @@ void Sonar::decodeShader(const cv::Mat& cv_image, std::vector<float>& bins) {
 }
 
 // Simulate one sonar reading in the Rock's structure
-void Sonar::simulateSonar(const std::vector<float>& bins, base::samples::Sonar& sonar, const std::vector<base::Angle>& bearings, float range) {
+base::samples::Sonar Sonar::simulateSonar(const std::vector<float>& bins, float range) {
+    base::samples::Sonar sonar;
     sonar.time = base::Time::now();
     sonar.bin_duration = base::Time::fromSeconds(getSamplingInterval(range) / 2.0);
     sonar.beam_width = beam_width;
@@ -34,9 +35,8 @@ void Sonar::simulateSonar(const std::vector<float>& bins, base::samples::Sonar& 
     sonar.bin_count = bin_count;
     sonar.beam_count = beam_count;
     sonar.bins = bins;
-    sonar.bearings = bearings;
 
-    sonar.validate();
+    return sonar;
 }
 
 void Sonar::convertShader(const cv::Mat& cv_image, std::vector<float>& bins) {
