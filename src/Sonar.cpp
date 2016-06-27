@@ -4,7 +4,6 @@ using namespace gpu_sonar_simulation;
 using namespace cv;
 
 void Sonar::decodeShader(const cv::Mat& cv_image, std::vector<float>& bins) {
-
     bins.assign(beam_count * bin_count, 0.0);
 
     double const beam_size = beam_width.getRad() / beam_count;
@@ -27,7 +26,6 @@ void Sonar::decodeShader(const cv::Mat& cv_image, std::vector<float>& bins) {
 
 // Simulate one sonar reading in the Rock's structure
 void Sonar::simulateSonar(const std::vector<float>& bins, base::samples::Sonar& sonar, const std::vector<base::Angle>& bearings, float range) {
-
     sonar.time = base::Time::now();
     sonar.bin_duration = base::Time::fromSeconds(getSamplingInterval(range) / 2.0);
     sonar.beam_width = beam_width;
@@ -42,7 +40,6 @@ void Sonar::simulateSonar(const std::vector<float>& bins, base::samples::Sonar& 
 }
 
 void Sonar::convertShader(const cv::Mat& cv_image, std::vector<float>& bins) {
-
     if (cv_image.type() != CV_32FC3)
         throw std::invalid_argument("Invalid shader image format.");
 
@@ -68,7 +65,6 @@ void Sonar::convertShader(const cv::Mat& cv_image, std::vector<float>& bins) {
 }
 
 void Sonar::rescaleIntensity(const std::vector<float>& src, std::vector<float>& dst) {
-
     double rate = bin_count * 1.0 / src.size();
     dst.assign(bin_count, 0.0);
 
@@ -89,7 +85,6 @@ void Sonar::rescaleIntensity(const std::vector<float>& src, std::vector<float>& 
 }
 
 float Sonar::sigmoid(float x) {
-
 	float l = 1, k = 18, x0 = 0.666666667;
 	float exp_value;
 
@@ -101,13 +96,11 @@ float Sonar::sigmoid(float x) {
 }
 
 float Sonar::getSamplingInterval(float range) {
-
 	float travel_time = range * 2.0 / speed_of_sound;
 	return travel_time / bin_count;
 }
 
 void Sonar::applyAdditionalGain(std::vector<float>& bins, float gain) {
-
     float gain_factor = 1 + gain / 0.25;
     std::transform(bins.begin(), bins.end(), bins.begin(), std::bind1st(std::multiplies<float>(), gain_factor));
     std::replace_if(bins.begin(), bins.end(), std::bind2nd(std::greater<float>(), 1.0), 1.0);
