@@ -85,19 +85,19 @@ void Sonar::rescaleIntensity(const std::vector<float>& src, std::vector<float>& 
 }
 
 float Sonar::sigmoid(float x) {
-	float l = 1, k = 18, x0 = 0.666666667;
-	float exp_value;
+    float l = 1, k = 18, x0 = 0.666666667;
+    float exp_value;
 
-	// Exponential calculation
-	exp_value = exp((double) (-k * (x - x0)));
+    // Exponential calculation
+    exp_value = exp((double) (-k * (x - x0)));
 
-	// Final sigmoid value
-	return (l / (1 + exp_value));
+    // Final sigmoid value
+    return (l / (1 + exp_value));
 }
 
 float Sonar::getSamplingInterval(float range) {
-	float travel_time = range * 2.0 / speed_of_sound;
-	return travel_time / bin_count;
+    float travel_time = range * 2.0 / speed_of_sound;
+    return travel_time / bin_count;
 }
 
 void Sonar::applyAdditionalGain(std::vector<float>& bins, float gain) {
