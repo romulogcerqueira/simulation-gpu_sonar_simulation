@@ -101,7 +101,7 @@ float Sonar::getSamplingInterval(float range) {
 }
 
 void Sonar::applyAdditionalGain(std::vector<float>& bins, float gain) {
-    float gain_factor = 1 + gain / 0.25;
+    float gain_factor = gain / 0.5;
     std::transform(bins.begin(), bins.end(), bins.begin(), std::bind1st(std::multiplies<float>(), gain_factor));
     std::replace_if(bins.begin(), bins.end(), std::bind2nd(std::greater<float>(), 1.0), 1.0);
 }
