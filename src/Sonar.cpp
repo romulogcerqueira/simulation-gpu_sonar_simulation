@@ -48,43 +48,20 @@ void Sonar::convertShader(const cv::Mat& cv_image, std::vector<float>& bins) {
     if (cv_image.type() != CV_32FC3)
         throw std::invalid_argument("Invalid shader image format.");
 
-    int default_bins = 256;
-    std::vector<int> bins_depth(default_bins, 0);
-    std::vector<float> bins_normal(default_bins, 0.0);
-
     // calculate depth histogram
+    std::vector<int> bins_depth(bin_count, 0);
     for (cv::MatConstIterator_<Vec3f> px = cv_image.begin<Vec3f>(); px != cv_image.end<Vec3f>(); ++px) {
-        int bin_idx = (*px)[1] * (default_bins - 1);
+        int bin_idx = (*px)[1] * (bin_count - 1);
         bins_depth[bin_idx]++;
     }
 
     // calculate bins intesity using normal values, depth histogram and sigmoid function
+    bins.assign(bin_count, 0.0);
     for (cv::MatConstIterator_<Vec3f> px = cv_image.begin<Vec3f>(); px != cv_image.end<Vec3f>(); ++px) {
-        int bin_idx = (*px)[1] * (default_bins - 1);
-        float intensity = (1.0 / bins_depth[bin_idx]) * sigmoid((*px)[0]);
-        bins_normal[bin_idx] += intensity;
-    }
-
-    // rescale the bins intensity using a linear transformation
-    rescaleIntensity(bins_normal, bins);
-}
-
-void Sonar::rescaleIntensity(const std::vector<float>& src, std::vector<float>& dst) {
-    double rate = bin_count * 1.0 / src.size();
-    dst.assign(bin_count, 0.0);
-
-    // Rescale the accumulated normal vector to the number of bins desired
-    for (unsigned int idx = 0; idx < src.size() - 1; ++idx) {
-        double new_idx = idx * rate;
-        dst[new_idx] = src[idx];
-
-        if (src[idx + 1]) {
-            double next_idx = (idx + 1) * rate;
-            double local_slope = (src[idx + 1] - src[idx]) / (next_idx - new_idx);
-            double local_const = src[idx] - local_slope * new_idx;
-
-            for (double j = new_idx + 1; j < next_idx; j += 1.0)
-                dst[j] = local_slope * j + local_const;
+        if ((*px)[0]) {
+            int bin_idx = (*px)[1] * (bin_count - 1);
+            float intensity = (1.0 / bins_depth[bin_idx]) * sigmoid((*px)[0]);
+            bins[bin_idx] += intensity;
         }
     }
 }

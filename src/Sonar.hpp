@@ -85,15 +85,6 @@ private:
     void convertShader(const cv::Mat& cv_image, std::vector<float>& bins);
 
     /**
-    *  The shader has a precision float limitation (1/256 = 0.00390625). To avoid "black
-    *  "  wholes" in the final sonar image if number of bins be more than 256, this function
-    *  rescale the sonar intensity data applying a linear transformation.
-    *  @param src: the raw bins intensity values in float
-    *  @param dst: the rescaled bins intensity values in float
-    */
-    void rescaleIntensity(const std::vector<float>& src, std::vector<float>& dst);
-
-    /**
     *  Accept the input value x then returns it's sigmoid value in float.
     *  @param x: the input value in float
     *  @return the sigmoid value in float
