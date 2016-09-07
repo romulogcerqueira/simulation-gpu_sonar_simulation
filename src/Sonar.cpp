@@ -85,14 +85,9 @@ void Sonar::rescaleIntensity(const std::vector<float>& src, std::vector<float>& 
 }
 
 float Sonar::sigmoid(float x) {
-    float l = 1, k = 18, x0 = 0.666666667;
-    float exp_value;
-
-    // Exponential calculation
-    exp_value = exp((double) (-k * (x - x0)));
-
-    // Final sigmoid value
-    return (l / (1 + exp_value));
+    float beta = 18, x0 = 0.666666667;
+    float t = (x - x0) * beta;
+    return (0.5 * tanh(0.5 * t) + 0.5);
 }
 
 float Sonar::getSamplingInterval(float range) {
