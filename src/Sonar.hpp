@@ -31,12 +31,16 @@ public:
     /** The speed of sound in the water in m/s */
     float speed_of_sound;
 
+    /** Correlation between shader columns with their respective beams */
+    std::vector<int> beam_cols;
+
     Sonar()
 	    : bin_count(500)
 	    , beam_count(0)
 	    , beam_width(base::Angle::fromRad(0.0))
 	    , beam_height(base::Angle::fromRad(0.0))
 	    , speed_of_sound(base::samples::Sonar::getSpeedOfSoundInWater())
+	    , beam_cols()
     {}
 
     Sonar(uint32_t bin_count, uint32_t beam_count, base::Angle beam_width, base::Angle beam_height)
@@ -45,6 +49,7 @@ public:
 	    , beam_width(beam_width)
 	    , beam_height(beam_height)
 	    , speed_of_sound(base::samples::Sonar::getSpeedOfSoundInWater())
+	    , beam_cols()
     {}
 
     /**
