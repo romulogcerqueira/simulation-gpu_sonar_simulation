@@ -82,7 +82,7 @@ private:
     *  @param cv_image: the shader image (normal and depth informations) in float
     *  @param bins: the output simulated sonar data (one beam) in float
     */
-    void convertShader(const cv::Mat& cv_image, std::vector<float>& bins);
+    void convertShader(cv::Mat& cv_image, float* bins);
 
     /**
     *  Accept the input value x then returns it's sigmoid value in float.

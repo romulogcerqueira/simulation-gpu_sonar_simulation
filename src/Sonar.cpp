@@ -4,7 +4,7 @@ using namespace gpu_sonar_simulation;
 using namespace cv;
 
 void Sonar::decodeShader(const cv::Mat& cv_image, std::vector<float>& bins) {
-    bins.assign(beam_count * bin_count, 0.0);
+    bins.resize(beam_count * bin_count);
 
     if (beam_cols.empty()) {
         double beam_size = beam_width.getRad() / beam_count;
@@ -21,10 +21,11 @@ void Sonar::decodeShader(const cv::Mat& cv_image, std::vector<float>& bins) {
         }
     }
 
+    std::vector<float> raw_intensity(bin_count);
+    cv::Mat cv_roi;
     for (unsigned int beam_idx = 0; beam_idx < beam_count; ++beam_idx) {
-        cv::Mat cv_roi = cv_image.colRange(beam_cols[beam_idx * 2], beam_cols[beam_idx * 2 + 1]);
-        std::vector<float> raw_intensity;
-        convertShader(cv_roi, raw_intensity);
+        cv_image(cv::Rect(beam_cols[beam_idx * 2], 0, beam_cols[beam_idx * 2 + 1] - beam_cols[beam_idx * 2], cv_image.rows)).copyTo(cv_roi);
+        convertShader(cv_roi, &raw_intensity[0]);
         memcpy(&bins[bin_count * beam_idx], &raw_intensity[0], bin_count * sizeof(float));
     }
 }
@@ -44,25 +45,21 @@ base::samples::Sonar Sonar::simulateSonar(const std::vector<float>& bins, float 
     return sonar;
 }
 
-void Sonar::convertShader(const cv::Mat& cv_image, std::vector<float>& bins) {
-    if (cv_image.type() != CV_32FC3)
-        throw std::invalid_argument("Invalid shader image format.");
-
+void Sonar::convertShader(cv::Mat& cv_image, float *bins) {
     // calculate depth histogram
     std::vector<int> bins_depth(bin_count, 0);
-    for (cv::MatConstIterator_<Vec3f> px = cv_image.begin<Vec3f>(); px != cv_image.end<Vec3f>(); ++px) {
-        int bin_idx = (*px)[1] * (bin_count - 1);
+    float* ptr = reinterpret_cast<float*>(cv_image.data);
+    for (size_t i = 0; i < cv_image.cols * cv_image.rows; i++) {
+        int bin_idx = *(ptr + i * 3 + 1) * (bin_count - 1);
         bins_depth[bin_idx]++;
     }
 
     // calculate bins intesity using normal values, depth histogram and sigmoid function
-    bins.assign(bin_count, 0.0);
-    for (cv::MatConstIterator_<Vec3f> px = cv_image.begin<Vec3f>(); px != cv_image.end<Vec3f>(); ++px) {
-        if ((*px)[0]) {
-            int bin_idx = (*px)[1] * (bin_count - 1);
-            float intensity = (1.0 / bins_depth[bin_idx]) * sigmoid((*px)[0]);
-            bins[bin_idx] += intensity;
-        }
+    memset(bins, 0, sizeof(float) * bin_count);
+    for (size_t i = 0; i < cv_image.cols * cv_image.rows; i++) {
+        int bin_idx = *(ptr + i * 3 + 1) * (bin_count - 1);
+        float intensity = (1.0 / bins_depth[bin_idx]) * sigmoid(*(ptr + i * 3));
+        bins[bin_idx] += intensity;
     }
 }
 
