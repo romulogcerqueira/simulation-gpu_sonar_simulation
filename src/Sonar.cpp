@@ -21,11 +21,11 @@ void Sonar::decodeShader(const cv::Mat& cv_image, std::vector<float>& bins) {
         }
     }
 
-    std::vector<float> raw_intensity(bin_count);
+    std::vector<float> raw_intensity;
     cv::Mat cv_roi;
     for (unsigned int beam_idx = 0; beam_idx < beam_count; ++beam_idx) {
         cv_image(cv::Rect(beam_cols[beam_idx * 2], 0, beam_cols[beam_idx * 2 + 1] - beam_cols[beam_idx * 2], cv_image.rows)).copyTo(cv_roi);
-        convertShader(cv_roi, &raw_intensity[0]);
+        convertShader(cv_roi, raw_intensity);
         memcpy(&bins[bin_count * beam_idx], &raw_intensity[0], bin_count * sizeof(float));
     }
 }
@@ -45,21 +45,51 @@ base::samples::Sonar Sonar::simulateSonar(const std::vector<float>& bins, float 
     return sonar;
 }
 
-void Sonar::convertShader(cv::Mat& cv_image, float *bins) {
+void Sonar::convertShader(cv::Mat& cv_image, std::vector<float>& bins) {
+    uint max_bin_count = 750;
+    if (max_bin_count > bin_count)
+        max_bin_count = bin_count;
+
     // calculate depth histogram
-    std::vector<int> bins_depth(bin_count, 0);
+    std::vector<int> bins_depth(max_bin_count, 0);
     float* ptr = reinterpret_cast<float*>(cv_image.data);
-    for (size_t i = 0; i < cv_image.cols * cv_image.rows; i++) {
-        int bin_idx = *(ptr + i * 3 + 1) * (bin_count - 1);
+    for (int i = 0; i < cv_image.cols * cv_image.rows; i++) {
+        int bin_idx = ptr[i * 3 + 1] * (max_bin_count - 1);
         bins_depth[bin_idx]++;
     }
 
     // calculate bins intesity using normal values, depth histogram and sigmoid function
-    memset(bins, 0, sizeof(float) * bin_count);
-    for (size_t i = 0; i < cv_image.cols * cv_image.rows; i++) {
-        int bin_idx = *(ptr + i * 3 + 1) * (bin_count - 1);
-        float intensity = (1.0 / bins_depth[bin_idx]) * sigmoid(*(ptr + i * 3));
+    bins.assign(max_bin_count, 0.0);
+    for (int i = 0; i < cv_image.cols * cv_image.rows; i++) {
+        int bin_idx = ptr[i * 3 + 1] * (max_bin_count - 1);
+        float intensity = (1.0 / bins_depth[bin_idx]) * sigmoid(ptr[i * 3]);
         bins[bin_idx] += intensity;
+    }
+
+    // check if interpolation is needed
+    if (max_bin_count != bin_count) {
+        std::vector<float> bins_interp(bin_count, 0);
+        linearInterpolation(bins, bins_interp);
+        bins = bins_interp;
+    }
+}
+
+void Sonar::linearInterpolation(const std::vector<float>& src, std::vector<float>& dst) {
+    float rate = bin_count / (float) src.size();
+
+    // Rescale the accumulated normal vector to the number of bins desired
+    for (unsigned int idx = 0; idx < src.size() - 1; ++idx) {
+        float new_idx = idx * rate;
+        dst[new_idx] = src[idx];
+
+        if (src[idx + 1]) {
+            float next_idx = (idx + 1) * rate;
+            float a = (src[idx + 1] - src[idx]) / (next_idx - new_idx); // angular coefficient
+            float b = src[idx] - a * new_idx;                           // linear coefficient
+
+            for (float j = new_idx + 1; j < next_idx; j += 1.0)
+                dst[j] = a * j + b;
+        }
     }
 }
 

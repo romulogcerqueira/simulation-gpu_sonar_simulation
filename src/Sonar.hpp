@@ -82,7 +82,14 @@ private:
     *  @param cv_image: the shader image (normal and depth informations) in float
     *  @param bins: the output simulated sonar data (one beam) in float
     */
-    void convertShader(cv::Mat& cv_image, float* bins);
+    void convertShader(cv::Mat& cv_image, std::vector<float>& bins);
+
+    /**
+    *  Rescale the sonar intensity data applying a linear transformation.
+    *  @param src: the raw bins intensity values in float
+    *  @param dst: the rescaled bins intensity values in float
+    */
+    void linearInterpolation(const std::vector<float>& src, std::vector<float>& dst);
 
     /**
     *  Accept the input value x then returns it's sigmoid value in float.
