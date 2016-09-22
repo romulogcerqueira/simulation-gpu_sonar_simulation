@@ -31,12 +31,16 @@ public:
     /** The speed of sound in the water in m/s */
     float speed_of_sound;
 
+    /** Correlation between shader columns with their respective beams */
+    std::vector<int> beam_cols;
+
     Sonar()
 	    : bin_count(500)
 	    , beam_count(0)
 	    , beam_width(base::Angle::fromRad(0.0))
 	    , beam_height(base::Angle::fromRad(0.0))
 	    , speed_of_sound(base::samples::Sonar::getSpeedOfSoundInWater())
+	    , beam_cols()
     {}
 
     Sonar(uint32_t bin_count, uint32_t beam_count, base::Angle beam_width, base::Angle beam_height)
@@ -45,6 +49,7 @@ public:
 	    , beam_width(beam_width)
 	    , beam_height(beam_height)
 	    , speed_of_sound(base::samples::Sonar::getSpeedOfSoundInWater())
+	    , beam_cols()
     {}
 
     /**
@@ -77,16 +82,14 @@ private:
     *  @param cv_image: the shader image (normal and depth informations) in float
     *  @param bins: the output simulated sonar data (one beam) in float
     */
-    void convertShader(const cv::Mat& cv_image, std::vector<float>& bins);
+    void convertShader(cv::Mat& cv_image, std::vector<float>& bins);
 
     /**
-    *  The shader has a precision float limitation (1/256 = 0.00390625). To avoid "black
-    *  "  wholes" in the final sonar image if number of bins be more than 256, this function
-    *  rescale the sonar intensity data applying a linear transformation.
+    *  Rescale the sonar intensity data applying a linear transformation.
     *  @param src: the raw bins intensity values in float
     *  @param dst: the rescaled bins intensity values in float
     */
-    void rescaleIntensity(const std::vector<float>& src, std::vector<float>& dst);
+    void linearInterpolation(const std::vector<float>& src, std::vector<float>& dst);
 
     /**
     *  Accept the input value x then returns it's sigmoid value in float.

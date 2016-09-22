@@ -4,23 +4,29 @@ using namespace gpu_sonar_simulation;
 using namespace cv;
 
 void Sonar::decodeShader(const cv::Mat& cv_image, std::vector<float>& bins) {
-    bins.assign(beam_count * bin_count, 0.0);
+    bins.resize(beam_count * bin_count);
 
-    double const beam_size = beam_width.getRad() / beam_count;
-    double const half_fovx = beam_width.getRad() / 2;
-    double const half_width = static_cast<double>(cv_image.cols) / 2;
-    double const angle2x = half_width / tan(half_fovx);
+    if (beam_cols.empty()) {
+        double beam_size = beam_width.getRad() / beam_count;
+        double half_fovx = beam_width.getRad() / 2;
+        double half_width = static_cast<double>(cv_image.cols) / 2;
+        double angle2x = half_width / tan(half_fovx);
 
-    // associates shader columns with their respective beam
+        // associates shader columns with their respective beam
+        for (unsigned int beam_idx = 0; beam_idx < beam_count; ++beam_idx) {
+            int min_col = round(half_width + tan(-half_fovx + beam_idx * beam_size) * angle2x);
+            int max_col = round(half_width + tan(-half_fovx + (beam_idx + 1) * beam_size) * angle2x);
+            beam_cols.push_back(min_col);
+            beam_cols.push_back(max_col);
+        }
+    }
+
+    std::vector<float> raw_intensity;
+    cv::Mat cv_roi;
     for (unsigned int beam_idx = 0; beam_idx < beam_count; ++beam_idx) {
-        int min_col = round(half_width + tan(-half_fovx + beam_idx * beam_size) * angle2x);
-        int max_col = round(half_width + tan(-half_fovx + (beam_idx + 1) * beam_size) * angle2x);
-        cv::Mat cv_roi = cv_image.colRange(min_col, max_col);
-
-        std::vector<float> raw_intensity;
+        cv_image(cv::Rect(beam_cols[beam_idx * 2], 0, beam_cols[beam_idx * 2 + 1] - beam_cols[beam_idx * 2], cv_image.rows)).copyTo(cv_roi);
         convertShader(cv_roi, raw_intensity);
-        for (unsigned int bin_idx = 0; bin_idx < bin_count; bin_idx++)
-            bins[bin_count * beam_idx + bin_idx] = raw_intensity[bin_idx];
+        memcpy(&bins[bin_count * beam_idx], &raw_intensity[0], bin_count * sizeof(float));
     }
 }
 
@@ -39,60 +45,58 @@ base::samples::Sonar Sonar::simulateSonar(const std::vector<float>& bins, float 
     return sonar;
 }
 
-void Sonar::convertShader(const cv::Mat& cv_image, std::vector<float>& bins) {
-    if (cv_image.type() != CV_32FC3)
-        throw std::invalid_argument("Invalid shader image format.");
-
-    int default_bins = 256;
-    std::vector<int> bins_depth(default_bins, 0);
-    std::vector<float> bins_normal(default_bins, 0.0);
+void Sonar::convertShader(cv::Mat& cv_image, std::vector<float>& bins) {
+    uint max_bin_count = 750;
+    if (max_bin_count > bin_count)
+        max_bin_count = bin_count;
 
     // calculate depth histogram
-    for (cv::MatConstIterator_<Vec3f> px = cv_image.begin<Vec3f>(); px != cv_image.end<Vec3f>(); ++px) {
-        int bin_idx = (*px)[1] * (default_bins - 1);
+    std::vector<int> bins_depth(max_bin_count, 0);
+    float* ptr = reinterpret_cast<float*>(cv_image.data);
+    for (int i = 0; i < cv_image.cols * cv_image.rows; i++) {
+        int bin_idx = ptr[i * 3 + 1] * (max_bin_count - 1);
         bins_depth[bin_idx]++;
     }
 
     // calculate bins intesity using normal values, depth histogram and sigmoid function
-    for (cv::MatConstIterator_<Vec3f> px = cv_image.begin<Vec3f>(); px != cv_image.end<Vec3f>(); ++px) {
-        int bin_idx = (*px)[1] * (default_bins - 1);
-        float intensity = (1.0 / bins_depth[bin_idx]) * sigmoid((*px)[0]);
-        bins_normal[bin_idx] += intensity;
+    bins.assign(max_bin_count, 0.0);
+    for (int i = 0; i < cv_image.cols * cv_image.rows; i++) {
+        int bin_idx = ptr[i * 3 + 1] * (max_bin_count - 1);
+        float intensity = (1.0 / bins_depth[bin_idx]) * sigmoid(ptr[i * 3]);
+        bins[bin_idx] += intensity;
     }
 
-    // rescale the bins intensity using a linear transformation
-    rescaleIntensity(bins_normal, bins);
+    // check if interpolation is needed
+    if (max_bin_count != bin_count) {
+        std::vector<float> bins_interp(bin_count, 0);
+        linearInterpolation(bins, bins_interp);
+        bins = bins_interp;
+    }
 }
 
-void Sonar::rescaleIntensity(const std::vector<float>& src, std::vector<float>& dst) {
-    double rate = bin_count * 1.0 / src.size();
-    dst.assign(bin_count, 0.0);
+void Sonar::linearInterpolation(const std::vector<float>& src, std::vector<float>& dst) {
+    float rate = bin_count / (float) src.size();
 
     // Rescale the accumulated normal vector to the number of bins desired
     for (unsigned int idx = 0; idx < src.size() - 1; ++idx) {
-        double new_idx = idx * rate;
+        float new_idx = idx * rate;
         dst[new_idx] = src[idx];
 
         if (src[idx + 1]) {
-            double next_idx = (idx + 1) * rate;
-            double local_slope = (src[idx + 1] - src[idx]) / (next_idx - new_idx);
-            double local_const = src[idx] - local_slope * new_idx;
+            float next_idx = (idx + 1) * rate;
+            float a = (src[idx + 1] - src[idx]) / (next_idx - new_idx); // angular coefficient
+            float b = src[idx] - a * new_idx;                           // linear coefficient
 
-            for (double j = new_idx + 1; j < next_idx; j += 1.0)
-                dst[j] = local_slope * j + local_const;
+            for (float j = new_idx + 1; j < next_idx; j += 1.0)
+                dst[j] = a * j + b;
         }
     }
 }
 
 float Sonar::sigmoid(float x) {
-    float l = 1, k = 18, x0 = 0.666666667;
-    float exp_value;
-
-    // Exponential calculation
-    exp_value = exp((double) (-k * (x - x0)));
-
-    // Final sigmoid value
-    return (l / (1 + exp_value));
+    float beta = 18, x0 = 0.666666667;
+    float t = (x - x0) * beta;
+    return (0.5 * tanh(0.5 * t) + 0.5);
 }
 
 float Sonar::getSamplingInterval(float range) {
