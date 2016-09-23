@@ -92,6 +92,14 @@ private:
     void linearInterpolation(const std::vector<float>& src, std::vector<float>& dst);
 
     /**
+    *  Speckle is a granular 'noise' that inherently exists in and degrades the quality of
+    *  underwater imaging sonars. This function adds this multiplicative noise to
+    *  simulated sonar image.
+    *  @param bins: the simulated sonar data in float
+    */
+    void addSpeckleNoise(std::vector<float>& bins);
+
+    /**
     *  Accept the input value x then returns it's sigmoid value in float.
     *  @param x: the input value in float
     *  @return the sigmoid value in float
