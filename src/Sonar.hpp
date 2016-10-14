@@ -94,10 +94,12 @@ private:
     /**
     *  Speckle is a granular 'noise' that inherently exists in and degrades the quality of
     *  underwater imaging sonars. This function adds this multiplicative noise to
-    *  simulated sonar image.
+    *  simulated sonar image based on gaussian distribution.
     *  @param bins: the simulated sonar data in float
+    *  @param mean: the expectation of gaussian distribution in float
+    *  @param stddev: the standard deviation of gaussian distribution in float
     */
-    void addSpeckleNoise(std::vector<float>& bins);
+    void applySpeckleNoise(std::vector<float>& bins, float mean, float stddev);
 
     /**
     *  Accept the input value x then returns it's sigmoid value in float.
