@@ -107,8 +107,8 @@ void Sonar::applySpeckleNoise(std::vector<float>& bins, float mean, float stddev
 
     // apply noise to sonar data
     for (size_t i = 0; i < bins.size(); i++) {
-        float noised_bin = bins[i] * dist(engine);
-        noised_bin < 0 ? bins[i] = 0 : bins[i] = noised_bin;
+        float noised = bins[i] * dist(engine);
+        bins[i] = noised < 0 ? 0 : noised;
     }
 }
 
