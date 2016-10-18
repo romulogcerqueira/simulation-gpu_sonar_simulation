@@ -1,5 +1,8 @@
 #include "Sonar.hpp"
 
+// Boost includes
+#include <boost/random.hpp>
+
 using namespace gpu_sonar_simulation;
 using namespace cv;
 
@@ -72,6 +75,9 @@ void Sonar::convertShader(cv::Mat& cv_image, std::vector<float>& bins) {
         linearInterpolation(bins, bins_interp);
         bins = bins_interp;
     }
+
+    // apply speckle noise to sonar image
+    applySpeckleNoise(bins, 0.4, 0.15);
 }
 
 void Sonar::linearInterpolation(const std::vector<float>& src, std::vector<float>& dst) {
@@ -90,6 +96,19 @@ void Sonar::linearInterpolation(const std::vector<float>& src, std::vector<float
             for (float j = new_idx + 1; j < next_idx; j += 1.0)
                 dst[j] = a * j + b;
         }
+    }
+}
+
+void Sonar::applySpeckleNoise(std::vector<float>& bins, float mean, float stddev) {
+    // produce speckle noise using a gaussian distribution
+    unsigned long seed = base::Time::now().toMicroseconds();
+    boost::random::mt19937 engine(seed);
+    boost::random::normal_distribution<float> dist(mean, stddev);
+
+    // apply noise to sonar data
+    for (size_t i = 0; i < bins.size(); i++) {
+        float noised = bins[i] * dist(engine);
+        bins[i] = noised < 0 ? 0 : noised;
     }
 }
 
