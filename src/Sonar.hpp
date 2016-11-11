@@ -85,13 +85,6 @@ private:
     void convertShader(cv::Mat& cv_image, std::vector<float>& bins);
 
     /**
-    *  Rescale the sonar intensity data applying a linear transformation.
-    *  @param src: the raw bins intensity values in float
-    *  @param dst: the rescaled bins intensity values in float
-    */
-    void linearInterpolation(const std::vector<float>& src, std::vector<float>& dst);
-
-    /**
     *  Speckle is a granular 'noise' that inherently exists in and degrades the quality of
     *  underwater imaging sonars. This function adds this multiplicative noise to
     *  simulated sonar image based on gaussian distribution.
