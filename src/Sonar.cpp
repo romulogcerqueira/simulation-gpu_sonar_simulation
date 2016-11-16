@@ -9,7 +9,9 @@ using namespace cv;
 void Sonar::decodeShader(const cv::Mat& cv_image, std::vector<float>& bins) {
     bins.resize(beam_count * bin_count);
 
-    if (beam_cols.empty()) {
+    // check if beam_cols must be recalculated
+    if (last_sonar.bin_count != bin_count || last_sonar.beam_count != beam_count) {
+        beam_cols.clear();
         double beam_size = beam_width.getRad() / beam_count;
         double half_fovx = beam_width.getRad() / 2;
         double half_width = static_cast<double>(cv_image.cols) / 2;
@@ -45,6 +47,7 @@ base::samples::Sonar Sonar::simulateSonar(const std::vector<float>& bins, float 
     sonar.beam_count = beam_count;
     sonar.bins = bins;
 
+    last_sonar = sonar;
     return sonar;
 }
 
