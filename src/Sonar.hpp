@@ -34,6 +34,9 @@ public:
     /** Correlation between shader columns with their respective beams */
     std::vector<int> beam_cols;
 
+    /** Store last received sonar data */
+    base::samples::Sonar last_sonar;
+
     Sonar()
 	    : bin_count(500)
 	    , beam_count(0)
@@ -41,6 +44,7 @@ public:
 	    , beam_height(base::Angle::fromRad(0.0))
 	    , speed_of_sound(base::samples::Sonar::getSpeedOfSoundInWater())
 	    , beam_cols()
+	    , last_sonar()
     {}
 
     Sonar(uint32_t bin_count, uint32_t beam_count, base::Angle beam_width, base::Angle beam_height)
@@ -50,6 +54,7 @@ public:
 	    , beam_height(beam_height)
 	    , speed_of_sound(base::samples::Sonar::getSpeedOfSoundInWater())
 	    , beam_cols()
+	    , last_sonar()
     {}
 
     /**
@@ -83,13 +88,6 @@ private:
     *  @param bins: the output simulated sonar data (one beam) in float
     */
     void convertShader(cv::Mat& cv_image, std::vector<float>& bins);
-
-    /**
-    *  Rescale the sonar intensity data applying a linear transformation.
-    *  @param src: the raw bins intensity values in float
-    *  @param dst: the rescaled bins intensity values in float
-    */
-    void linearInterpolation(const std::vector<float>& src, std::vector<float>& dst);
 
     /**
     *  Speckle is a granular 'noise' that inherently exists in and degrades the quality of
