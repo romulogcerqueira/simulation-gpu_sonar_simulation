@@ -41,12 +41,6 @@ void SonarSimulation::processShader(osg::ref_ptr<osg::Image>& osg_image, std::ve
  
     // apply the additional gain
     sonar.applyAdditionalGain(bins, gain);
-    // display shader image
-    //std::auto_ptr<base::samples::frame::Frame> frame(new base::samples::frame::Frame());
-    //getLastFrame(*frame.get());
-    
-    //frame->time = base::Time::now();
-    //_shader_viewer.write(RTT::extras::ReadOnlyPointer<Frame>(frame.release()));
 
 }
 
@@ -87,9 +81,6 @@ void SonarSimulation::updateSonarPose(const Eigen::Affine3d pose)
 
     // transformation matrixes multiplication
     osg::Matrixd matrix(pose.data());
-    //matrix.setTrans(osg::Vec3(pose.translation()));
-    //matrix.setRotate(osg::Quat(pose.orientation.x(), pose.orientation.y(), 
-    //pose.orientation.z(), pose.orientation.w()));
     matrix.invert(matrix);
 
     // correct coordinate system and apply geometric transformations
