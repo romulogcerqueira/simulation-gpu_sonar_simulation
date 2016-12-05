@@ -7,7 +7,8 @@ SonarSimulation::SonarSimulation(float range, float gain, uint32_t bin_count,
         uint32_t beam_count, base::Angle beam_width, base::Angle beam_height, 
         uint value, bool isHeight, osg::ref_ptr<osg::Group> root):
     sonar(bin_count, beam_count, beam_width, beam_height),
-    gain(gain)
+    gain(gain),
+    range(range)
 {
     double const half_fovx = sonar.beam_width.getRad() / 2;
     double const half_fovy = sonar.beam_height.getRad() / 2;
@@ -67,7 +68,6 @@ base::samples::Sonar SonarSimulation::simulateSonarData(const Eigen::Affine3d& s
     processShader(osg_image, bins);
 
     // simulate sonar data
-    float range = 50.0f; 
     base::samples::Sonar sim_sonar_data = sonar.simulateSonar(bins, range);
 
     return sim_sonar_data;
@@ -130,9 +130,10 @@ void SonarSimulation::setGain(float gain_value)
     gain = gain_value;
 }
 
-void SonarSimulation::setRange(float range)
+void SonarSimulation::setRange(float range_value)
 {
-    normal_depth_map.setMaxRange(range);
+    normal_depth_map.setMaxRange(range_value);
+    range = range_value;
 }    
 
 

@@ -38,7 +38,8 @@ public:
     void setRange(float range);
     void setGain(float gain_value);
     
-    double gain;
+    float gain;
+    float range;
     cv::Mat last_cv_image;
 
     gpu_sonar_simulation::Sonar sonar;
