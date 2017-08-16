@@ -4,8 +4,8 @@
 // Rock includes
 #include <gpu_sonar_simulation/Sonar.hpp>
 #include <gpu_sonar_simulation/Utils.hpp>
-#include <vizkit3d_normal_depth_map/NormalDepthMap.hpp>
-#include <vizkit3d_normal_depth_map/ImageViewerCaptureTool.hpp>
+#include <normal_depth_map/NormalDepthMap.hpp>
+#include <normal_depth_map/ImageViewerCaptureTool.hpp>
 #include <base/Angle.hpp>
 
 // Openscenegraph includes
@@ -17,7 +17,7 @@
 #include <opencv2/highgui/highgui.hpp>
 
 using namespace gpu_sonar_simulation;
-using namespace vizkit3d_normal_depth_map;
+using namespace normal_depth_map;
 using namespace cv;
 
 BOOST_AUTO_TEST_SUITE(gpu_sonar_simulation_MicronSim)
