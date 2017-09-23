@@ -6,7 +6,7 @@
 using namespace gpu_sonar_simulation;
 using namespace cv;
 
-void Sonar::decodeShader(const cv::Mat& cv_image, std::vector<float>& bins) {
+void Sonar::decodeShader(const cv::Mat& cv_image, std::vector<float>& bins, bool enable_noise) {
     bins.resize(beam_count * bin_count);
 
     // check if beam_cols must be recalculated
@@ -31,6 +31,8 @@ void Sonar::decodeShader(const cv::Mat& cv_image, std::vector<float>& bins) {
     for (unsigned int beam_idx = 0; beam_idx < beam_count; ++beam_idx) {
         cv_image(cv::Rect(beam_cols[beam_idx * 2], 0, beam_cols[beam_idx * 2 + 1] - beam_cols[beam_idx * 2], cv_image.rows)).copyTo(cv_roi);
         convertShader(cv_roi, raw_intensity);
+        if (enable_noise)
+            applySpeckleNoise(raw_intensity, 0.4, 0.15);
         memcpy(&bins[bin_count * beam_idx], &raw_intensity[0], bin_count * sizeof(float));
     }
 }
@@ -67,9 +69,6 @@ void Sonar::convertShader(cv::Mat& cv_image, std::vector<float>& bins) {
         float intensity = (1.0 / bins_depth[bin_idx]) * sigmoid(ptr[i * 3]);
         bins[bin_idx] += intensity;
     }
-
-    // apply speckle noise to sonar image
-    applySpeckleNoise(bins, 0.4, 0.15);
 }
 
 void Sonar::applySpeckleNoise(std::vector<float>& bins, float mean, float stddev) {
