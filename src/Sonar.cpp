@@ -28,11 +28,12 @@ void Sonar::decodeShader(const cv::Mat& cv_image, std::vector<float>& bins, bool
 
     std::vector<float> raw_intensity;
     cv::Mat cv_roi;
+    double noise_mean = 0.4, noise_stddev = 0.15;
     for (unsigned int beam_idx = 0; beam_idx < beam_count; ++beam_idx) {
         cv_image(cv::Rect(beam_cols[beam_idx * 2], 0, beam_cols[beam_idx * 2 + 1] - beam_cols[beam_idx * 2], cv_image.rows)).copyTo(cv_roi);
         convertShader(cv_roi, raw_intensity);
         if (enable_noise)
-            applySpeckleNoise(raw_intensity, 0.4, 0.15);
+            applySpeckleNoise(raw_intensity, noise_mean, noise_stddev);
         memcpy(&bins[bin_count * beam_idx], &raw_intensity[0], bin_count * sizeof(float));
     }
 }
