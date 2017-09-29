@@ -47,7 +47,8 @@ int main(int argc, char* argv[])
 
         /* simulate sonar image */
         std::vector<float> bins;
-        sonar_sim.decodeShader(cv_shader, bins);
+        bool enable_speckle_noise = true;
+        sonar_sim.decodeShader(cv_shader, bins, enable_speckle_noise);
 
         /* apply additional gain */
         float gain = 0.5;

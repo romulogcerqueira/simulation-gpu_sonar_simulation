@@ -6,6 +6,7 @@
 
 // Rock includes
 #include <base/samples/Sonar.hpp>
+#include <base/samples/RigidBodyState.hpp>
 #include <base/Angle.hpp>
 
 // Opencv includes
@@ -63,8 +64,9 @@ public:
     *  on each beam.
     *  @param cv_image: the shader image (normal, depth and angle informations) in float
     *  @param bins: the output simulated sonar data (all beams) in float
+    *  @param enable_noise: enable/disable speckle noise in acoustic image
     */
-    void decodeShader(const cv::Mat& cv_image, std::vector<float>& bins);
+    void decodeShader(const cv::Mat& cv_image, std::vector<float>& bins, bool enable_noise);
 
     /**
     *  Encapsulate the simulated sonar data in the Rock's sonar datatype.
