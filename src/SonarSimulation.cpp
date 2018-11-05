@@ -1,21 +1,22 @@
 #include "SonarSimulation.hpp"
 #include <gpu_sonar_simulation/Utils.hpp>
-#include <memory>
 using namespace gpu_sonar_simulation;
 
 SonarSimulation::SonarSimulation(float range, float gain, uint32_t bin_count, 
-        uint32_t beam_count, base::Angle beam_width, base::Angle beam_height, 
-        uint value, bool isHeight, osg::ref_ptr<osg::Group> root):
-    sonar(bin_count, beam_count, beam_width, beam_height),
-    gain(gain),
-    range(range)
+        base::Angle beam_width, base::Angle beam_height, 
+        uint value, bool isHeight, osg::ref_ptr<osg::Group> root, uint32_t beam_count): 
+        sonar(bin_count, beam_count, beam_width, beam_height),
+        gain(gain),
+        range(range),
+        speckle_noise(false)
 {
     double const half_fovx = sonar.beam_width.getRad() / 2;
     double const half_fovy = sonar.beam_height.getRad() / 2;
 
     // initialize shader (NormalDepthMap and ImageViewerCaptureTool)
-    normal_depth_map = vizkit3d_normal_depth_map::NormalDepthMap(range, half_fovx, half_fovy);
-    capture_tool = vizkit3d_normal_depth_map::ImageViewerCaptureTool(sonar.beam_height.getRad(), sonar.beam_width.getRad(), value, isHeight);
+    normal_depth_map = normal_depth_map::NormalDepthMap(range, half_fovx, half_fovy);
+    capture_tool = normal_depth_map::ImageViewerCaptureTool(sonar.beam_height.getRad(), 
+        sonar.beam_width.getRad(), value, isHeight);
     capture_tool.setBackgroundColor(osg::Vec4d(0.0, 0.0, 0.0, 1.0));
     normal_depth_map.addNodeChild(root);
 }
@@ -23,7 +24,8 @@ SonarSimulation::SonarSimulation(float range, float gain, uint32_t bin_count,
 SonarSimulation::~SonarSimulation()
 {}
 
-void SonarSimulation::processShader(osg::ref_ptr<osg::Image>& osg_image, std::vector<float>& bins) {
+void SonarSimulation::processShader(osg::ref_ptr<osg::Image>& osg_image, 
+    std::vector<float>& bins) {
     // receives shader image in opencv format
     cv::Mat cv_image, cv_depth;
     gpu_sonar_simulation::convertOSG2CV(osg_image, cv_image);
@@ -37,7 +39,7 @@ void SonarSimulation::processShader(osg::ref_ptr<osg::Image>& osg_image, std::ve
     cv::merge(channels, cv_image);
 
     // decode shader informations to sonar data
-    sonar.decodeShader(cv_image, bins);
+    sonar.decodeShader(cv_image, bins, speckle_noise);
     last_cv_image = cv_image;
  
     // apply the additional gain
@@ -93,9 +95,20 @@ void SonarSimulation::updateSonarPose(const Eigen::Affine3d pose)
 
 void SonarSimulation::setupShader(uint value, bool isHeight)
 {
-    capture_tool = vizkit3d_normal_depth_map::ImageViewerCaptureTool(sonar.beam_height.getRad(), sonar.beam_width.getRad(), value, isHeight);
+    capture_tool = normal_depth_map::ImageViewerCaptureTool(sonar.beam_height.getRad(), 
+        sonar.beam_width.getRad(), value, isHeight);
     capture_tool.setBackgroundColor(osg::Vec4d(0.0, 0.0, 0.0, 1.0));
 }
+
+void SonarSimulation::setAttenuationCoefficient( const double frequency, 
+    const double temperature, const double depth,
+    const double salinity, const double acidity)
+{
+    double attenuation_coeff = underwaterSignalAttenuation(
+        frequency, temperature, depth, salinity, acidity);
+    normal_depth_map.setAttenuationCoefficient(attenuation_coeff);
+}
+
 
 void SonarSimulation::setSonarBinCount(uint32_t bin_count)
 {
@@ -125,9 +138,21 @@ base::Angle SonarSimulation::getSonarBeamWidth()
     return sonar.beam_width;
 }
 
+void SonarSimulation::setSonarBeamHeight(base::Angle beam_height)
+{
+    sonar.beam_height = beam_height;
+}
+base::Angle SonarSimulation::getSonarBeamHeight()
+{
+    return sonar.beam_height;
+}
 void SonarSimulation::setGain(float gain_value)
 {
     gain = gain_value;
+}
+float SonarSimulation::getGain()
+{
+    return gain;
 }
 
 void SonarSimulation::setRange(float range_value)
@@ -135,5 +160,15 @@ void SonarSimulation::setRange(float range_value)
     normal_depth_map.setMaxRange(range_value);
     range = range_value;
 }    
+
+float SonarSimulation::getRange()
+{
+    return range;
+}
+
+void SonarSimulation::enableSpeckleNoise(bool enable)
+{
+    speckle_noise = enable;
+}
 
 
