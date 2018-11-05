@@ -9,7 +9,8 @@
   <depend package="base/cmake" />
   <depend package="base/types" />
   <depend package="opencv" />
-  <test_depend package="simulation/normal_depth_map" />
+  <depend package="perception/frame_helper" />
+  <depend package="simulation/normal_depth_map" />
   <tags>needs_ops</tags>
   <!-- osg dependencies -->
   <rosdep name="osg" />
