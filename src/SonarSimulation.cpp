@@ -4,11 +4,13 @@ using namespace gpu_sonar_simulation;
 
 SonarSimulation::SonarSimulation(float range, float gain, uint32_t bin_count, 
         base::Angle beam_width, base::Angle beam_height, 
-        uint value, bool isHeight, osg::ref_ptr<osg::Group> root, uint32_t beam_count): 
+        unsigned int resolution, bool isHeight, osg::ref_ptr<osg::Group> root, uint32_t beam_count): 
         sonar(bin_count, beam_count, beam_width, beam_height),
         gain(gain),
         range(range),
-        speckle_noise(false)
+        speckle_noise(false),
+        resolution(resolution),
+        isHeight(isHeight)
 {
     double const half_fovx = sonar.beam_width.getRad() / 2;
     double const half_fovy = sonar.beam_height.getRad() / 2;
@@ -16,7 +18,7 @@ SonarSimulation::SonarSimulation(float range, float gain, uint32_t bin_count,
     // initialize shader (NormalDepthMap and ImageViewerCaptureTool)
     normal_depth_map = normal_depth_map::NormalDepthMap(range, half_fovx, half_fovy);
     capture_tool = normal_depth_map::ImageViewerCaptureTool(sonar.beam_height.getRad(), 
-        sonar.beam_width.getRad(), value, isHeight);
+        sonar.beam_width.getRad(), resolution, isHeight);
     capture_tool.setBackgroundColor(osg::Vec4d(0.0, 0.0, 0.0, 1.0));
     normal_depth_map.addNodeChild(root);
 }
@@ -44,7 +46,6 @@ void SonarSimulation::processShader(osg::ref_ptr<osg::Image>& osg_image,
  
     // apply the additional gain
     sonar.applyAdditionalGain(bins, gain);
-
 }
 
 base::samples::frame::Frame SonarSimulation::getLastFrame()
@@ -78,7 +79,7 @@ base::samples::Sonar SonarSimulation::simulateSonarData(const Eigen::Affine3d& s
 void SonarSimulation::updateSonarPose(const Eigen::Affine3d pose)
 {
     // convert OSG (Z-forward) to RoCK coordinate system (X-forward)
-    osg::Matrixd rock_coordinate_matrix = osg::Matrixd::rotate( M_PI_2, osg::Vec3(0, 0, 1)) 
+    static const osg::Matrixd rock_coordinate_matrix = osg::Matrixd::rotate( M_PI_2, osg::Vec3(0, 0, 1)) 
         * osg::Matrixd::rotate(-M_PI_2, osg::Vec3(1, 0, 0));
 
     // transformation matrixes multiplication
@@ -93,10 +94,10 @@ void SonarSimulation::updateSonarPose(const Eigen::Affine3d pose)
     capture_tool.setCameraPosition(eye, center, up);
 }
 
-void SonarSimulation::setupShader(uint value, bool isHeight)
+void SonarSimulation::setupShader(unsigned int resolution, bool isHeight)
 {
     capture_tool = normal_depth_map::ImageViewerCaptureTool(sonar.beam_height.getRad(), 
-        sonar.beam_width.getRad(), value, isHeight);
+        sonar.beam_width.getRad(), resolution, isHeight);
     capture_tool.setBackgroundColor(osg::Vec4d(0.0, 0.0, 0.0, 1.0));
 }
 
@@ -132,6 +133,7 @@ uint32_t SonarSimulation::getSonarBeamCount()
 void SonarSimulation::setSonarBeamWidth(base::Angle beam_width)
 {
     sonar.beam_width = beam_width;
+    setupShader(resolution, isHeight);
 }
 base::Angle SonarSimulation::getSonarBeamWidth()
 {
@@ -141,6 +143,7 @@ base::Angle SonarSimulation::getSonarBeamWidth()
 void SonarSimulation::setSonarBeamHeight(base::Angle beam_height)
 {
     sonar.beam_height = beam_height;
+    setupShader(resolution, isHeight);
 }
 base::Angle SonarSimulation::getSonarBeamHeight()
 {

@@ -17,7 +17,7 @@ class SonarSimulation
 {
 public:
     SonarSimulation(float range,  float gain, uint32_t bin_count,  
-        base::Angle beam_width, base::Angle beam_height, uint value, 
+        base::Angle beam_width, base::Angle beam_height, unsigned int resolution, 
         bool isHeight, osg::ref_ptr<osg::Group> root, uint32_t beam_count = 0);
     ~SonarSimulation();
 
@@ -33,7 +33,7 @@ public:
     *  @param bins: the output simulated sonar data (all beams) in float
     */
     void processShader(osg::ref_ptr<osg::Image>& osg_image, std::vector<float>& bins);
-    void setupShader(uint value, bool isHeight);
+    void setupShader(unsigned int resolution, bool isHeight);
     
     base::samples::frame::Frame getLastFrame();
 
@@ -68,6 +68,8 @@ private:
     float range;
     cv::Mat last_cv_image;
     bool speckle_noise;
+    unsigned int resolution;
+    bool isHeight;
 
     gpu_sonar_simulation::Sonar sonar;
     normal_depth_map::NormalDepthMap normal_depth_map;
