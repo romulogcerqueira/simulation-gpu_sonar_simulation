@@ -15,6 +15,7 @@
 
 // Opencv includes
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc.hpp>
 
 using namespace gpu_sonar_simulation;
 using namespace normal_depth_map;
