@@ -3,6 +3,9 @@
 // Boost includes
 #include <boost/random.hpp>
 
+// C++ includes
+#include <chrono>
+
 using namespace gpu_sonar_simulation;
 using namespace cv;
 
@@ -18,7 +21,7 @@ void Sonar::decodeShader(const cv::Mat& cv_image, std::vector<float>& bins, bool
         double angle2x = half_width / tan(half_fovx);
 
         // associates shader columns with their respective beam
-        for (unsigned int beam_idx = 0; beam_idx < beam_count; ++beam_idx) {
+        for (size_t beam_idx = 0; beam_idx < beam_count; ++beam_idx) {
             int min_col = round(half_width + tan(-half_fovx + beam_idx * beam_size) * angle2x);
             int max_col = round(half_width + tan(-half_fovx + (beam_idx + 1) * beam_size) * angle2x);
             beam_cols.push_back(min_col);
@@ -27,13 +30,11 @@ void Sonar::decodeShader(const cv::Mat& cv_image, std::vector<float>& bins, bool
     }
 
     std::vector<float> raw_intensity;
-    cv::Mat cv_roi;
-    double noise_mean = 0.4, noise_stddev = 0.15;
-    for (unsigned int beam_idx = 0; beam_idx < beam_count; ++beam_idx) {
-        cv_image(cv::Rect(beam_cols[beam_idx * 2], 0, beam_cols[beam_idx * 2 + 1] - beam_cols[beam_idx * 2], cv_image.rows)).copyTo(cv_roi);
+    for (size_t beam_idx = 0; beam_idx < beam_count; ++beam_idx) {
+        cv::Mat cv_roi = cv_image.colRange(beam_cols[beam_idx * 2], beam_cols[beam_idx * 2 + 1]).clone();
         convertShader(cv_roi, raw_intensity);
         if (enable_noise)
-            applySpeckleNoise(raw_intensity, noise_mean, noise_stddev);
+            applySpeckleNoise(raw_intensity);
         memcpy(&bins[bin_count * beam_idx], &raw_intensity[0], bin_count * sizeof(float));
     }
 }
@@ -57,7 +58,7 @@ base::samples::Sonar Sonar::simulateSonar(const std::vector<float>& bins, float 
 void Sonar::convertShader(cv::Mat& cv_image, std::vector<float>& bins) {
     // calculate depth histogram
     std::vector<int> bins_depth(bin_count, 0);
-    float* ptr = reinterpret_cast<float*>(cv_image.data);
+    float *ptr = cv_image.ptr<float>();
     for (int i = 0; i < cv_image.cols * cv_image.rows; i++) {
         int bin_idx = ptr[i * 3 + 1] * (bin_count - 1);
         bins_depth[bin_idx]++;
@@ -72,16 +73,23 @@ void Sonar::convertShader(cv::Mat& cv_image, std::vector<float>& bins) {
     }
 }
 
-void Sonar::applySpeckleNoise(std::vector<float>& bins, float mean, float stddev) {
+void Sonar::applySpeckleNoise(std::vector<float>& bins) {
+    double mean = 0.95, stddev = 0.30;
+    auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
+    auto now_cast = std::chrono::duration_cast<std::chrono::nanoseconds>(now);
+    unsigned long seed = now_cast.count();
+
     // produce speckle noise using a gaussian distribution
-    unsigned long seed = base::Time::now().toMicroseconds();
     boost::random::mt19937 engine(seed);
     boost::random::normal_distribution<float> dist(mean, stddev);
 
-    // apply noise to sonar data
-    for (size_t i = 0; i < bins.size(); i++) {
-        float noised = bins[i] * dist(engine);
-        bins[i] = noised < 0 ? 0 : noised;
+    // apply speckle noise on bins data
+    float min_value = 0.03;
+    for (size_t i = 0; i < bins.size(); i++)
+    {
+        if (bins[i] < min_value)
+            bins[i] = min_value;
+        bins[i] *= fabs(dist(engine));
     }
 }
 
@@ -97,7 +105,7 @@ float Sonar::getSamplingInterval(float range) {
 }
 
 void Sonar::applyAdditionalGain(std::vector<float>& bins, float gain) {
-    float gain_factor = gain / 0.5;
+    float gain_factor = 2 * gain;
     std::transform(bins.begin(), bins.end(), bins.begin(), std::bind1st(std::multiplies<float>(), gain_factor));
     std::replace_if(bins.begin(), bins.end(), std::bind2nd(std::greater<float>(), 1.0), 1.0);
 }

@@ -41,7 +41,8 @@ public:
                                       const double temperature,
                                       const double depth,
                                       const double salinity,
-                                      const double acidity);
+                                      const double acidity,
+                                      bool enable);
 
     void setSonarBinCount(uint32_t bin_count);
     uint32_t getSonarBinCount();
@@ -56,6 +57,7 @@ public:
     base::Angle getSonarBeamHeight();
 
     void enableSpeckleNoise(bool enable);
+    void enableReverb(bool enable);
 
     void setRange(float range);
     float getRange();

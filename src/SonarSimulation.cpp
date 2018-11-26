@@ -16,11 +16,12 @@ SonarSimulation::SonarSimulation(float range, float gain, uint32_t bin_count,
     double const half_fovy = sonar.beam_height.getRad() / 2;
 
     // initialize shader (NormalDepthMap and ImageViewerCaptureTool)
-    normal_depth_map = normal_depth_map::NormalDepthMap(range, half_fovx, half_fovy);
-    capture_tool = normal_depth_map::ImageViewerCaptureTool(sonar.beam_height.getRad(), 
-        sonar.beam_width.getRad(), resolution, isHeight);
-    capture_tool.setBackgroundColor(osg::Vec4d(0.0, 0.0, 0.0, 1.0));
+    normal_depth_map = normal_depth_map::NormalDepthMap(range);
     normal_depth_map.addNodeChild(root);
+
+    capture_tool = normal_depth_map::ImageViewerCaptureTool(sonar.beam_height.getRad(),
+                                                            sonar.beam_width.getRad(), resolution, isHeight);
+    capture_tool.setBackgroundColor(osg::Vec4d(0.0, 0.0, 0.0, 1.0));
 }
 
 SonarSimulation::~SonarSimulation()
@@ -29,16 +30,8 @@ SonarSimulation::~SonarSimulation()
 void SonarSimulation::processShader(osg::ref_ptr<osg::Image>& osg_image, 
     std::vector<float>& bins) {
     // receives shader image in opencv format
-    cv::Mat cv_image, cv_depth;
+    cv::Mat cv_image;
     gpu_sonar_simulation::convertOSG2CV(osg_image, cv_image);
-    osg::ref_ptr<osg::Image> osg_depth = capture_tool.getDepthBuffer();
-    gpu_sonar_simulation::convertOSG2CV(osg_depth, cv_depth);
-
-    // replace depth matrix
-    std::vector<cv::Mat> channels;
-    cv::split(cv_image, channels);
-    channels[1] = cv_depth;
-    cv::merge(channels, cv_image);
 
     // decode shader informations to sonar data
     sonar.decodeShader(cv_image, bins, speckle_noise);
@@ -103,10 +96,12 @@ void SonarSimulation::setupShader(unsigned int resolution, bool isHeight)
 
 void SonarSimulation::setAttenuationCoefficient( const double frequency, 
     const double temperature, const double depth,
-    const double salinity, const double acidity)
+    const double salinity, const double acidity,
+    bool enable)
 {
-    double attenuation_coeff = underwaterSignalAttenuation(
-        frequency, temperature, depth, salinity, acidity);
+    double attenuation_coeff = 0;
+    if (enable)
+        attenuation_coeff = underwaterSignalAttenuation(frequency, temperature, depth, salinity, acidity);
     normal_depth_map.setAttenuationCoefficient(attenuation_coeff);
 }
 
@@ -174,4 +169,7 @@ void SonarSimulation::enableSpeckleNoise(bool enable)
     speckle_noise = enable;
 }
 
-
+void SonarSimulation::enableReverb(bool enable)
+{
+    normal_depth_map.setDrawReverb(enable);
+}

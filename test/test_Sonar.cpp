@@ -80,18 +80,20 @@ BOOST_AUTO_TEST_CASE(histogram) {
 BOOST_AUTO_TEST_CASE(complete_rotate_image) {
     osg::ref_ptr<osg::Image> osg_image;
 
-    // init scene
+    // init normal depth map
     base::Angle beam_width = base::Angle::fromDeg(3.0);
     base::Angle beam_height = base::Angle::fromDeg(35.0);
     double range = 60.0;
-    NormalDepthMap normal_depth_map(range, beam_width.getDeg(), beam_height.getDeg());
-    ImageViewerCaptureTool capture(640,480);
-    capture.setBackgroundColor(osg::Vec4d(0, 0, 0, 0));
+    NormalDepthMap normal_depth_map(range);
 
     // add oilrig
     osg::ref_ptr<osg::Group> root = new osg::Group();
     addOilRig(root);
     normal_depth_map.addNodeChild(root);
+
+    // image viewer
+    ImageViewerCaptureTool capture(640, 480);
+    capture.setBackgroundColor(osg::Vec4d(0, 0, 0, 0));
 
     base::Angle rot = base::Angle::fromDeg(0.0);
     base::Angle transX = base::Angle::fromDeg(0.0);

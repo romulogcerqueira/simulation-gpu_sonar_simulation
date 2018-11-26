@@ -92,14 +92,14 @@ private:
     void convertShader(cv::Mat& cv_image, std::vector<float>& bins);
 
     /**
-    *  Speckle is a granular 'noise' that inherently exists in and degrades the quality of
-    *  underwater imaging sonars. This function adds this multiplicative noise to
-    *  simulated sonar image based on gaussian distribution.
+    *  Speckle is a granular 'noise' that inherently exists in and degrades the quality
+    *  of underwater imaging sonars. The multiplicative component follows a non-uniform
+    *  Gaussian distribution; and the additive component is formed by a Gaussian noise
+    *  with 0 mean and Q variance. This function applies the speckle noise to
+    *  simulated sonar image.
     *  @param bins: the simulated sonar data in float
-    *  @param mean: the expectation of gaussian distribution in float
-    *  @param stddev: the standard deviation of gaussian distribution in float
     */
-    void applySpeckleNoise(std::vector<float>& bins, float mean, float stddev);
+    void applySpeckleNoise(std::vector<float>& bins);
 
     /**
     *  Accept the input value x then returns it's sigmoid value in float.
