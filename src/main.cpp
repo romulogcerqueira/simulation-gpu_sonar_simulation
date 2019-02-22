@@ -1,20 +1,43 @@
+// C++ includes
 #include <iostream>
 #include <numeric>
 
 // Rock includes
 #include <gpu_sonar_simulation/Sonar.hpp>
+#include <gpu_sonar_simulation/SonarSimulation.hpp>
 #include <gpu_sonar_simulation/Utils.hpp>
+#include <normal_depth_map/ImageViewerCaptureTool.hpp>
+#include <normal_depth_map/NormalDepthMap.hpp>
+#include <normal_depth_map/Tools.hpp>
 
 // OpenCV includes
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+// OpenSceneGraph includes
+#include <osg/Group>
+#include <osgViewer/Viewer>
+#include <osg/Camera>
+#include <osg/ShapeDrawable>
+#include <osg/Geode>
+
 using namespace gpu_sonar_simulation;
 using namespace cv;
 
+// generate arbitrary value between min and max
 float randomValue(float min, float max)
 {
     return (min + (float)rand() / (RAND_MAX + 1.0f) * (max - min));
+}
+
+// generate arbitrary vector between min and max
+osg::Vec3 randomVector(float min_x, float max_x,
+                       float min_y, float max_y,
+                       float min_z, float max_z)
+{
+    return osg::Vec3(randomValue(min_x, max_x),
+                     randomValue(min_y, max_y),
+                     randomValue(min_z, max_z));
 }
 
 // create a depth and normal matrixes to test
@@ -22,16 +45,58 @@ cv::Mat createRandomImage(int rows, int cols)
 {
     cv::Mat raw_image = cv::Mat::zeros(rows, cols, CV_32FC3);
 
-    for (size_t k = 0; k < raw_image.channels() - 1; k++)
-        for (size_t i = 0; i < rows; i++)
-            for (size_t j = 0; j < cols; j++)
+    for (int k = 0; k < raw_image.channels() - 1; k++)
+        for (int i = 0; i < rows; i++)
+            for (int j = 0; j < cols; j++)
                 raw_image.at<Vec3f>(i, j)[k] = randomValue(0, 1);
 
     return raw_image;
 }
 
+// draw the scene with box, sphere, cylinder, cone and capsule
+osg::ref_ptr<osg::Group> demoScene(
+    float min_x, float max_x,
+    float min_y, float max_y,
+    float min_z, float max_z)
+{
+    const float radius = 0.8f;
+    const float height = 1.0f;
+    osg::TessellationHints *hints = new osg::TessellationHints();
+    hints->setDetailRatio(2.0f);
+
+    osg::Geode *geode = new osg::Geode();
+    osg::ShapeDrawable *shape = new osg::ShapeDrawable();
+    osg::Vec3 pos;
+
+    pos = randomVector(min_x, max_x, min_y, max_y, min_z, max_z);
+    shape = new osg::ShapeDrawable(new osg::Sphere(pos, radius), hints);
+    geode->addDrawable(shape);
+
+    pos = randomVector(min_x, max_x, min_y, max_y, min_z, max_z);
+    shape = new osg::ShapeDrawable(new osg::Box(pos, 2 * radius), hints);
+    geode->addDrawable(shape);
+
+    pos = randomVector(min_x, max_x, min_y, max_y, min_z, max_z);
+    shape = new osg::ShapeDrawable(new osg::Cone(pos, radius, height), hints);
+    geode->addDrawable(shape);
+
+    pos = randomVector(min_x, max_x, min_y, max_y, min_z, max_z);
+    shape = new osg::ShapeDrawable(new osg::Cylinder(pos, radius, height), hints);
+    geode->addDrawable(shape);
+
+    pos = randomVector(min_x, max_x, min_y, max_y, min_z, max_z);
+    shape = new osg::ShapeDrawable(new osg::Capsule(pos, radius, height), hints);
+    geode->addDrawable(shape);
+
+    osg::ref_ptr<osg::Group> root = new osg::Group();
+    root->addChild(geode);
+    return root;
+}
+
 int main(int argc, char *argv[])
 {
+    srand(time(NULL));
+
     /* parameters */
     std::vector<uint> beam_counts = {128, 256};
     std::vector<uint> bin_counts = {500, 1000};
@@ -40,8 +105,17 @@ int main(int argc, char *argv[])
 
     uint N = 500;
     float resolution_constant = 2.56;
+    float range = 20.0;
+    float gain = 0.5;
+    bool isScanning = false;
 
-    // TODO: missing attenuation, reverb (both done on shader)
+    double attenuation_frequency = 300;
+    double attenuation_temperature = 25;
+    double attenuation_depth = -2;
+    double attenuation_salinity = 0;
+    double attenuation_acidity = 8;
+
+    Eigen::Affine3d pose = Eigen::Affine3d::Identity();
 
     for (size_t k = 0; k < beam_widths.size(); k++)
     {
@@ -49,17 +123,15 @@ int main(int argc, char *argv[])
         {
             for (size_t j = 0; j < bin_counts.size(); j++)
             {
-                /* generate a random shader image */
-                uint width = bin_counts[j] * resolution_constant;
-                base::Angle beam_width = beam_widths[k];
-                base::Angle beam_height = beam_heights[k];
-                uint height = width * tan(beam_height.rad * 0.5) / tan(beam_width.rad * 0.5);
-                cv::Mat cv_shader = createRandomImage(height, width);
-
-                /* initialize Sonar Simulation */
+                /* set parameters */
                 uint32_t bin_count = bin_counts[j];
                 uint32_t beam_count = beam_counts[i];
-                Sonar sonar_sim(bin_count, beam_count, beam_width, beam_height);
+                uint width = bin_count * resolution_constant;
+                base::Angle beam_width = beam_widths[k];
+                base::Angle beam_height = beam_heights[k];
+
+                /* generate a random osg image */
+                osg::ref_ptr<osg::Group> root = demoScene(-range, range, -range, range, -range, range);
 
                 /* process N times */
                 std::vector<double> timestamp;
@@ -67,18 +139,28 @@ int main(int argc, char *argv[])
                 {
                     base::Time ts0 = base::Time::now();
 
-                    /* simulate sonar image */
-                    std::vector<float> bins;
-                    bool enable_speckle_noise = true;
-                    sonar_sim.decodeShader(cv_shader, bins, enable_speckle_noise);
+                    /* initialize sonar simulation */
+                    SonarSimulation sonar_sim(range, gain, bin_count, beam_width, beam_height, width, isScanning, root);
+                    sonar_sim.setSonarBeamCount(beam_count);
 
-                    /* apply additional gain */
-                    float gain = 0.5;
-                    sonar_sim.applyAdditionalGain(bins, gain);
+                    /* set underwater acoustic effects */
+                    sonar_sim.enableReverb(true);
+                    sonar_sim.enableSpeckleNoise(true);
+                    sonar_sim.setAttenuationCoefficient(attenuation_frequency,
+                                                        attenuation_temperature,
+                                                        attenuation_depth,
+                                                        attenuation_salinity,
+                                                        attenuation_acidity,
+                                                        true);
 
-                    /* encapsulate in rock's sonar structure */
-                    float range = 50.0;
-                    base::samples::Sonar sonar = sonar_sim.simulateSonar(bins, range);
+                    /* simulate sonar samples */
+                    base::samples::Sonar sonar = sonar_sim.simulateSonarData(pose);
+                    base::Angle interval = base::Angle::fromRad(
+                        sonar_sim.getSonarBeamWidth().getRad() / sonar_sim.getSonarBeamCount());
+                    base::Angle start = base::Angle::fromRad(
+                        -sonar_sim.getSonarBeamWidth().getRad() / 2);
+                    sonar.setRegularBeamBearings(start, interval);
+                    sonar.validate();
 
                     /* accumulate timestamps */
                     timestamp.push_back((base::Time::now() - ts0).toSeconds());
@@ -92,14 +174,16 @@ int main(int argc, char *argv[])
                 for (size_t m = 0; m < timestamp.size(); m++)
                     accum += (timestamp[m] - mean) * (timestamp[m] - mean);
                 double stddev = sqrt(accum / (timestamp.size() - 1));
+		        double fps = 1 / mean;
 
                 std::cout << "=== PARAMETERS ===" << std::endl;
-                std::cout << "FOV       = " << sonar_sim.beam_width.getDeg() << " x " << sonar_sim.beam_height.getDeg() << std::endl;
+                std::cout << "FOV       = " << beam_width.getDeg() << " x " << beam_height.getDeg() << std::endl;
                 std::cout << "Beams     = " << beam_count << std::endl;
                 std::cout << "Bins      = " << bin_count << std::endl;
                 std::cout << "Width     = " << width << std::endl;
                 std::cout << "Mean      = " << mean << std::endl;
                 std::cout << "Stddev    = " << stddev << std::endl;
+		        std::cout << "FPS	    = " << fps << std::endl;
                 std::cout << std::endl;
             }
         }
