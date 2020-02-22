@@ -15,7 +15,6 @@
 
 // Opencv includes
 #include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc.hpp>
 
 using namespace gpu_sonar_simulation;
 using namespace normal_depth_map;
@@ -81,8 +80,6 @@ BOOST_AUTO_TEST_CASE(complete_rotate_image) {
     osg::ref_ptr<osg::Image> osg_image;
 
     // init normal depth map
-    base::Angle beam_width = base::Angle::fromDeg(3.0);
-    base::Angle beam_height = base::Angle::fromDeg(35.0);
     double range = 60.0;
     NormalDepthMap normal_depth_map(range);
 

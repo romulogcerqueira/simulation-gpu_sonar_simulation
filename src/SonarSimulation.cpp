@@ -1,6 +1,5 @@
 #include "SonarSimulation.hpp"
 #include <gpu_sonar_simulation/Utils.hpp>
-#include <opencv2/highgui.hpp>
 #include <sstream>
 
 using namespace gpu_sonar_simulation;
@@ -14,11 +13,7 @@ SonarSimulation::SonarSimulation(float range, float gain, uint32_t bin_count,
         speckle_noise(false),
         resolution(resolution),
         isHeight(isHeight)
-        // id(0)
 {
-    double const half_fovx = sonar.beam_width.getRad() / 2;
-    double const half_fovy = sonar.beam_height.getRad() / 2;
-
     // initialize shader (NormalDepthMap and ImageViewerCaptureTool)
     normal_depth_map = normal_depth_map::NormalDepthMap(range);
     normal_depth_map.addNodeChild(root);
@@ -37,9 +32,6 @@ void SonarSimulation::processShader(osg::ref_ptr<osg::Image>& osg_image,
     cv::Mat cv_image;
     gpu_sonar_simulation::convertOSG2CV(osg_image, cv_image);
 
-    // cv::imshow("cv_image", cv_image);
-    // cv::waitKey();
-
     // decode shader informations to sonar data
     sonar.decodeShader(cv_image, bins, speckle_noise);
     last_cv_image = cv_image;
@@ -52,12 +44,6 @@ base::samples::frame::Frame SonarSimulation::getLastFrame()
 {
     last_cv_image.convertTo(last_cv_image, CV_8UC3, 255);
     cv::flip(last_cv_image, last_cv_image, 0);
-    // cv::imwrite("/home/romulo/shader_image.png", last_cv_image);
-    // std::string filename = "/home/romulo/shader_" + std::to_string(id++) + ".png" << std::endl;
-
-    // std::ostringstream os;
-    // os << "/home/romulo/frames/file_" << id++ << ".png";
-    // cv::imwrite(os.str(), last_cv_image);
 
     base::samples::frame::Frame frame;
     frame_helper::FrameHelper::copyMatToFrame(last_cv_image, frame);

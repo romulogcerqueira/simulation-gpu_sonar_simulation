@@ -82,17 +82,6 @@ private:
     bool speckle_noise;
     unsigned int resolution;
     bool isHeight;
-    // int id;
-
-    // gpu_sonar_simulation::Sonar sonar;
-    // normal_depth_map::NormalDepthMap normal_depth_map;
-    // normal_depth_map::ImageViewerCaptureTool capture_tool;
-
-    // /**
-    //  *  Update sonar pose according to auv pose.
-    //  *  @param pose: pose of the auv
-    // */
-    // void updateSonarPose(const Eigen::Affine3d pose);
 };
 
 }

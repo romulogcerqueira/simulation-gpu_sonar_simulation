@@ -146,8 +146,9 @@ void computePerformance(const std::vector<uint> &beam_counts,
                                                         true);
 
 
-                    // temp
+                    /* set sonar device pose */
                     sonar_sim.updateSonarPose(pose);
+
                     base::Time ts1 = base::Time::now();
                     osg::ref_ptr<osg::Image> osg_image = sonar_sim.capture_tool.grabImage(sonar_sim.normal_depth_map.getNormalDepthMapNode());
                     timestamp_gpu.push_back(1 / (base::Time::now() - ts1).toSeconds());
@@ -155,9 +156,6 @@ void computePerformance(const std::vector<uint> &beam_counts,
                     std::vector<float> bins;
                     sonar_sim.processShader(osg_image, bins);
                     base::samples::Sonar sonar = sonar_sim.sonar.simulateSonar(bins, range);
-
-                    // original
-                    // base::samples::Sonar sonar = sonar_sim.simulateSonarData(pose);
 
                     /* simulate sonar samples */
                     if (isScanning)
@@ -191,15 +189,11 @@ void computePerformance(const std::vector<uint> &beam_counts,
                 double accum_gpu = 0.0;
                 for (size_t m = 0; m < timestamp_gpu.size(); m++)
                     accum_gpu += (timestamp_gpu[m] - mean_gpu) * (timestamp_gpu[m] - mean_gpu);
-                // double stddev_gpu = sqrt(accum_gpu / (timestamp_gpu.size() - 1));
+                double stddev_gpu = sqrt(accum_gpu / (timestamp_gpu.size() - 1));
 
-               // double fps = 1 / mean;
+                double fps = 1 / mean;
 
-               std::cout << "=== PERFORMANCE RESULTS ===" << std::endl;
-//                if (isScanning)
-  //                  std::cout << "Mechanical Scanning Imaging Sonar" << std::endl;
-    //            else
-      //              std::cout << "Forward Looking Sonar" << std::endl;
+                std::cout << "=== PERFORMANCE RESULTS ===" << std::endl;
                 std::cout << "FOV           = " << beam_width.getDeg() << " x " << beam_height.getDeg() << std::endl;
                 std::cout << "Beams         = " << beam_count << std::endl;
                 std::cout << "Bins          = " << bin_count << std::endl;
@@ -207,16 +201,10 @@ void computePerformance(const std::vector<uint> &beam_counts,
                 std::cout << "Mean          = " << roundf(mean, 4) << std::endl;
                 std::cout << "Mean_GPU      = " << roundf(mean_gpu, 4) << std::endl;
                 std::cout << "Stddev        = " << roundf(stddev, 4) << std::endl;
-                // std::cout << "Stddev_GPU    = " << roundf(stddev_gpu, 4) << std::endl;
+                std::cout << "Stddev_GPU    = " << roundf(stddev_gpu, 4) << std::endl;
+                std::cout << "FPS           = " << roundf(fps, 1) << std::endl;
                 std::cout << "=========================================" << std::endl;
-                // std::cout << "FPS       = " << roundf(fps, 1) << std::endl;
 
-                // std::cout << "$" << beam_width.getDeg() << "^{\\circ}$ x $" << beam_height.getDeg() << "^{\\circ}$ && " <<
-                //              beam_count << " & " <<
-                //              bin_count << " & $" <<
-                //              (roundf(mean, 4) * 1000) << " & " <<
-                //              (roundf(stddev, 4) * 1000) << " & " <<
-                //              (roundf(fps, 1)) << " \\\\" << std::endl;
             }
         }
     }
@@ -236,7 +224,7 @@ int main(int argc, char *argv[])
     std::vector<float> beam_widths = {90};
     std::vector<float> beam_heights = {15};
     bool isScanning = false;
-//    computePerformance(beam_counts, bin_counts, beam_widths, beam_heights, N, resolution_constant, isScanning);
+   computePerformance(beam_counts, bin_counts, beam_widths, beam_heights, N, resolution_constant, isScanning);
 
     /* MSIS parameters */
      std::cout << "Computing MSIS performance..." << std::endl;
