@@ -117,6 +117,7 @@ BOOST_AUTO_TEST_CASE(complete_rotate_image) {
         osg::ref_ptr<osg::Image> osgImage = capture.grabImage(normal_depth_map.getNormalDepthMapNode());
         cv::Mat cvImage;
         convertOSG2CV(osgImage, cvImage);
+        cv::flip(cvImage, cvImage, 0);
 
         cv::imshow("Normal Depth Map", cvImage);
         char k = cv::waitKey(0);
