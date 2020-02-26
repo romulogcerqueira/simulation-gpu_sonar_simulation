@@ -1,6 +1,7 @@
 // C++ includes
 #include <iostream>
 #include <numeric>
+#include <chrono>
 
 // Rock includes
 #include <gpu_sonar_simulation/Sonar.hpp>
@@ -23,9 +24,6 @@
 
 // Boost includes
 #include <boost/random.hpp>
-
-// C++ includes
-#include <chrono>
 
 using namespace gpu_sonar_simulation;
 using namespace cv;

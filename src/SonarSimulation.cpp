@@ -1,6 +1,5 @@
 #include "SonarSimulation.hpp"
 #include <gpu_sonar_simulation/Utils.hpp>
-#include <sstream>
 
 using namespace gpu_sonar_simulation;
 
