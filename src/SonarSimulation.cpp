@@ -1,10 +1,11 @@
 #include "SonarSimulation.hpp"
 #include <gpu_sonar_simulation/Utils.hpp>
+
 using namespace gpu_sonar_simulation;
 
-SonarSimulation::SonarSimulation(float range, float gain, uint32_t bin_count, 
-        base::Angle beam_width, base::Angle beam_height, 
-        unsigned int resolution, bool isHeight, osg::ref_ptr<osg::Group> root, uint32_t beam_count): 
+SonarSimulation::SonarSimulation(float range, float gain, uint32_t bin_count,
+        base::Angle beam_width, base::Angle beam_height,
+        unsigned int resolution, bool isHeight, osg::ref_ptr<osg::Group> root, uint32_t beam_count):
         sonar(bin_count, beam_count, beam_width, beam_height),
         gain(gain),
         range(range),
@@ -12,9 +13,6 @@ SonarSimulation::SonarSimulation(float range, float gain, uint32_t bin_count,
         resolution(resolution),
         isHeight(isHeight)
 {
-    double const half_fovx = sonar.beam_width.getRad() / 2;
-    double const half_fovy = sonar.beam_height.getRad() / 2;
-
     // initialize shader (NormalDepthMap and ImageViewerCaptureTool)
     normal_depth_map = normal_depth_map::NormalDepthMap(range);
     normal_depth_map.addNodeChild(root);
@@ -27,7 +25,7 @@ SonarSimulation::SonarSimulation(float range, float gain, uint32_t bin_count,
 SonarSimulation::~SonarSimulation()
 {}
 
-void SonarSimulation::processShader(osg::ref_ptr<osg::Image>& osg_image, 
+void SonarSimulation::processShader(osg::ref_ptr<osg::Image>& osg_image,
     std::vector<float>& bins) {
     // receives shader image in opencv format
     cv::Mat cv_image;
@@ -36,7 +34,7 @@ void SonarSimulation::processShader(osg::ref_ptr<osg::Image>& osg_image,
     // decode shader informations to sonar data
     sonar.decodeShader(cv_image, bins, speckle_noise);
     last_cv_image = cv_image;
- 
+
     // apply the additional gain
     sonar.applyAdditionalGain(bins, gain);
 }
@@ -45,6 +43,7 @@ base::samples::frame::Frame SonarSimulation::getLastFrame()
 {
     last_cv_image.convertTo(last_cv_image, CV_8UC3, 255);
     cv::flip(last_cv_image, last_cv_image, 0);
+
     base::samples::frame::Frame frame;
     frame_helper::FrameHelper::copyMatToFrame(last_cv_image, frame);
     return frame;
@@ -57,7 +56,7 @@ base::samples::Sonar SonarSimulation::simulateSonarData(const Eigen::Affine3d& s
     updateSonarPose(sonar_pose);
 
     // receive shader image
-    osg::ref_ptr<osg::Image> osg_image = 
+    osg::ref_ptr<osg::Image> osg_image =
         capture_tool.grabImage(normal_depth_map.getNormalDepthMapNode());
     // process the shader image
     std::vector<float> bins;
@@ -72,7 +71,7 @@ base::samples::Sonar SonarSimulation::simulateSonarData(const Eigen::Affine3d& s
 void SonarSimulation::updateSonarPose(const Eigen::Affine3d pose)
 {
     // convert OSG (Z-forward) to RoCK coordinate system (X-forward)
-    static const osg::Matrixd rock_coordinate_matrix = osg::Matrixd::rotate( M_PI_2, osg::Vec3(0, 0, 1)) 
+    static const osg::Matrixd rock_coordinate_matrix = osg::Matrixd::rotate( M_PI_2, osg::Vec3(0, 0, 1))
         * osg::Matrixd::rotate(-M_PI_2, osg::Vec3(1, 0, 0));
 
     // transformation matrixes multiplication
@@ -89,12 +88,12 @@ void SonarSimulation::updateSonarPose(const Eigen::Affine3d pose)
 
 void SonarSimulation::setupShader(unsigned int resolution, bool isHeight)
 {
-    capture_tool = normal_depth_map::ImageViewerCaptureTool(sonar.beam_height.getRad(), 
+    capture_tool = normal_depth_map::ImageViewerCaptureTool(sonar.beam_height.getRad(),
         sonar.beam_width.getRad(), resolution, isHeight);
     capture_tool.setBackgroundColor(osg::Vec4d(0.0, 0.0, 0.0, 1.0));
 }
 
-void SonarSimulation::setAttenuationCoefficient( const double frequency, 
+void SonarSimulation::setAttenuationCoefficient( const double frequency,
     const double temperature, const double depth,
     const double salinity, const double acidity,
     bool enable)
@@ -157,7 +156,7 @@ void SonarSimulation::setRange(float range_value)
 {
     normal_depth_map.setMaxRange(range_value);
     range = range_value;
-}    
+}
 
 float SonarSimulation::getRange()
 {
