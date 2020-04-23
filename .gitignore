@@ -2,3 +2,5 @@ build/
 *.sw?
 logs/
 test_data/
+
+.vscode/

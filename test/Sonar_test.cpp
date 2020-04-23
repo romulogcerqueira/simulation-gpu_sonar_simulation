@@ -15,6 +15,7 @@
 
 // Opencv includes
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 using namespace gpu_sonar_simulation;
 using namespace normal_depth_map;
@@ -78,6 +79,7 @@ BOOST_AUTO_TEST_CASE(histogram) {
 
 BOOST_AUTO_TEST_CASE(complete_rotate_image) {
     osg::ref_ptr<osg::Image> osg_image;
+    bool exit_flag = false;
 
     // init normal depth map
     double range = 60.0;
@@ -97,7 +99,7 @@ BOOST_AUTO_TEST_CASE(complete_rotate_image) {
     base::Angle transY = base::Angle::fromDeg(0.0);
     base::Angle transZ = base::Angle::fromDeg(0.0);
 
-    while(true) {
+    while (!exit_flag) {
         // transformation matrixes
         osg::Matrixd matrix;
         matrix.setTrans(osg::Vec3(transX.getDeg(), transY.getDeg(), transZ.getDeg()));
@@ -124,7 +126,7 @@ BOOST_AUTO_TEST_CASE(complete_rotate_image) {
 
         switch(k) {
             case 27:		//	ESC
-                exit(0);
+                exit_flag = true;
                 break;
             case 85:		// UP
                 transZ += base::Angle::fromDeg(2.0);
